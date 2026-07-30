@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { MusicCard, AIPersona } from '../types';
-import { fetchCardsFromSupabase, insertCardToSupabase, deleteCardFromSupabase } from '../utils/supabase';
+import { fetchCardsFromSupabase, insertCardToSupabase, deleteCardFromSupabase, getSupabaseConfig } from '../utils/supabase';
 
 interface StoreState {
   todayCards: MusicCard[];
@@ -176,6 +176,7 @@ export const useStore = create<StoreState>((set, get) => ({
       const todayKey = getLocalDateKey();
       const localToday = get().todayCards;
       const localHistory = get().historyCards;
+      const allLocalCards = [...localToday, ...localHistory];
 
       // Merge local + fetched cards by card ID
       const cardMap = new Map<string, MusicCard>();
@@ -197,7 +198,14 @@ export const useStore = create<StoreState>((set, get) => ({
         localStorage.setItem('momentune_history_cards', JSON.stringify(historyCards));
       }
 
-      // 3. Push merged cards back to serverless cloud API
+      // If Supabase is configured, push any existing local cards into Supabase PostgreSQL DB!
+      if (getSupabaseConfig()) {
+        allLocalCards.forEach((card) => {
+          insertCardToSupabase(card);
+        });
+      }
+
+      // Push merged cards back to serverless cloud API
       await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
