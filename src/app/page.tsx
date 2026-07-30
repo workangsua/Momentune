@@ -381,15 +381,26 @@ export default function Home() {
                             }}
                             className="absolute w-full max-w-[310px] overflow-visible"
                           >
-                            {/* Glowing Blue Backdrop Blob (Creates smooth glowing blue aura behind card & bottom button) */}
-                            <div className="absolute bottom-[-10px] inset-x-2 h-64 rounded-[36px] bg-gradient-to-t from-blue-600/70 via-blue-500/40 to-transparent blur-2xl pointer-events-none -z-10" />
+                            {/* Protruding Blue Tab Layered BEHIND the Main Card (Matches User Sketch Mockup 100%) */}
+                            <a
+                              href={card.track.spotifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="absolute bottom-[-24px] left-1/2 -translate-x-1/2 w-[84%] h-20 rounded-b-[24px] bg-gradient-to-b from-[#0080ff] to-[#0055ff] flex items-end justify-center pb-2.5 shadow-lg cursor-pointer transition-transform hover:translate-y-0.5 z-0 group border border-blue-400/30"
+                            >
+                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm mb-0.5">
+                                <Music className="h-3.5 w-3.5 animate-pulse text-white" />
+                                <span>SPOTIFY PLAY</span>
+                                <ExternalLink className="h-3 w-3 opacity-80" />
+                              </div>
+                            </a>
 
-                            {/* Single Unified Frosted Glass Card Panel */}
+                            {/* Main Card Layered IN FRONT of the Blue Tab */}
                             <div className="relative z-10 bg-white/5 border border-white/15 rounded-[32px] p-4 pb-6 flex flex-col overflow-hidden shadow-2xl backdrop-blur-2xl">
-                              {/* Internal Soft Blue Color Blend Layer */}
-                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/15 to-blue-600/55 pointer-events-none -z-10" />
+                              {/* Soft Inner Blue Tint Blend */}
+                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/10 to-blue-600/40 pointer-events-none -z-10" />
 
-                              {/* Large Album Cover Image */}
+                              {/* Album Cover Art */}
                               <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/10 shadow-inner bg-black/20">
                                 <img
                                   src={card.track.albumCover}
@@ -397,7 +408,7 @@ export default function Home() {
                                   className="h-full w-full object-cover"
                                 />
                                 
-                                {/* Situation chips overlay on top-left */}
+                                {/* Situation chips */}
                                 <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                                   {Object.values(card.context).map((tag, tIdx) => tag && (
                                     <span
@@ -409,7 +420,7 @@ export default function Home() {
                                   ))}
                                 </div>
 
-                                {/* Stamp overlay on bottom-right */}
+                                {/* Timestamp */}
                                 <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
                                   <span className="text-[9px] text-zinc-300 font-bold font-mono">
                                     {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
@@ -417,7 +428,7 @@ export default function Home() {
                                 </div>
                               </div>
 
-                              {/* Title & Artist - Softly Blended over Glass & Blue Glow */}
+                              {/* Text info inside main card */}
                               <div className="mt-5 px-1 flex flex-col text-left">
                                 <div className="flex justify-between items-start gap-4">
                                   <div className="min-w-0 flex-1">
@@ -436,7 +447,7 @@ export default function Home() {
                                   </button>
                                 </div>
 
-                                {/* AI Curated Reason - Soft Divider */}
+                                {/* AI Curated Reason */}
                                 <div className="mt-4 pt-3.5 border-t border-white/10">
                                   <p className="text-xs text-zinc-200 leading-relaxed font-semibold drop-shadow-sm">
                                     {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
@@ -445,19 +456,6 @@ export default function Home() {
                               </div>
                             </div>
 
-                            {/* Spotify Play Button: Frosted Glass Pill overlaying glowing blue aura */}
-                            <a
-                              href={card.track.spotifyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="relative z-20 -mt-3 mx-8 h-11 rounded-b-2xl bg-white/15 hover:bg-white/25 backdrop-blur-xl border-x border-b border-white/20 border-t border-white/10 flex items-center justify-center shadow-xl transition duration-300 cursor-pointer"
-                            >
-                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm">
-                                <Music className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
-                                <span>SPOTIFY PLAY</span>
-                                <ExternalLink className="h-3 w-3 opacity-80" />
-                              </div>
-                            </a>
                           </motion.div>
                         );
                       })}
@@ -571,12 +569,23 @@ export default function Home() {
                         <div className="flex flex-col gap-8">
                           {cards.map((card) => (
                             <div key={card.id} className="relative group overflow-visible">
-                              {/* Glowing Blue Backdrop Blob */}
-                              <div className="absolute bottom-[-10px] inset-x-2 h-64 rounded-[36px] bg-gradient-to-t from-blue-600/70 via-blue-500/40 to-transparent blur-2xl pointer-events-none -z-10" />
+                              {/* Protruding Blue Tab Layered BEHIND Main Card */}
+                              <a
+                                href={card.track.spotifyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="absolute bottom-[-24px] left-1/2 -translate-x-1/2 w-[84%] h-20 rounded-b-[24px] bg-gradient-to-b from-[#0080ff] to-[#0055ff] flex items-end justify-center pb-2.5 shadow-lg cursor-pointer transition-transform hover:translate-y-0.5 z-0 group border border-blue-400/30"
+                              >
+                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm mb-0.5">
+                                  <Music className="h-3.5 w-3.5 animate-pulse text-white" />
+                                  <span>SPOTIFY PLAY</span>
+                                  <ExternalLink className="h-3 w-3 opacity-80" />
+                                </div>
+                              </a>
 
-                              {/* Single Unified Frosted Glass Card Panel */}
+                              {/* Main Card Layered IN FRONT */}
                               <div className="relative z-10 bg-white/5 border border-white/15 rounded-[32px] p-4 pb-6 flex flex-col overflow-hidden shadow-2xl backdrop-blur-2xl">
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/15 to-blue-600/55 pointer-events-none -z-10" />
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/10 to-blue-600/40 pointer-events-none -z-10" />
 
                                 {/* Album Cover */}
                                 <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/10 shadow-inner bg-black/20">
@@ -630,20 +639,6 @@ export default function Home() {
                                   </div>
                                 </div>
                               </div>
-
-                              {/* Spotify Play Button */}
-                              <a
-                                href={card.track.spotifyUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="relative z-20 -mt-3 mx-8 h-11 rounded-b-2xl bg-white/15 hover:bg-white/25 backdrop-blur-xl border-x border-b border-white/20 border-t border-white/10 flex items-center justify-center shadow-xl transition duration-300 cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm">
-                                  <Music className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
-                                  <span>SPOTIFY PLAY</span>
-                                  <ExternalLink className="h-3 w-3 opacity-80" />
-                                </div>
-                              </a>
 
                             </div>
                           ))}
