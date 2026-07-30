@@ -93,7 +93,8 @@ export const redirectToSpotifyAuth = (clientId: string) => {
     "user-read-email",
     "user-library-read",
     "playlist-read-private",
-    "playlist-read-collaborative"
+    "playlist-read-collaborative",
+    "user-top-read"
   ].join(" ");
 
   localStorage.setItem("momentune_spotify_client_id", clientId);
@@ -191,41 +192,66 @@ export const getRandomTrack = async (
     try {
       const userTracks: any[] = [];
 
-      // 1. Fetch User's Liked/Saved Tracks (/v1/me/tracks)
-      const savedData = await querySpotifyApi('https://api.spotify.com/v1/me/tracks?limit=50', token);
-      if (savedData?.items) {
-        savedData.items.forEach((item: any) => {
-          if (item.track) userTracks.push(item.track);
-        });
+      // 1. Fetch User's Saved/Liked Tracks (/v1/me/tracks?limit=50)
+      try {
+        const savedData = await querySpotifyApi('https://api.spotify.com/v1/me/tracks?limit=50', token);
+        if (savedData?.items) {
+          savedData.items.forEach((item: any) => {
+            if (item.track && item.track.name && item.track.artists) {
+              userTracks.push(item.track);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Saved tracks fetch notice:", e);
       }
 
-      // 2. Fetch User's Playlists (/v1/me/playlists) & playlist tracks
-      const playlistsData = await querySpotifyApi('https://api.spotify.com/v1/me/playlists?limit=20', token);
-      if (playlistsData?.items && playlistsData.items.length > 0) {
-        const targetPlaylists = playlistsData.items.slice(0, 5);
-        for (const pl of targetPlaylists) {
-          if (pl?.id) {
-            try {
-              const plTracksData = await querySpotifyApi(`https://api.spotify.com/v1/playlists/${pl.id}/tracks?limit=50`, token);
-              if (plTracksData?.items) {
-                plTracksData.items.forEach((item: any) => {
-                  if (item.track && item.track.id) {
-                    userTracks.push(item.track);
-                  }
-                });
+      // 2. Fetch User's Top Listened Tracks (/v1/me/top/tracks?limit=50)
+      try {
+        const topData = await querySpotifyApi('https://api.spotify.com/v1/me/top/tracks?limit=50', token);
+        if (topData?.items) {
+          topData.items.forEach((t: any) => {
+            if (t && t.name && t.artists) {
+              userTracks.push(t);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Top tracks fetch notice:", e);
+      }
+
+      // 3. Fetch User's Playlists (/v1/me/playlists?limit=50) & ALL playlist tracks
+      try {
+        const playlistsData = await querySpotifyApi('https://api.spotify.com/v1/me/playlists?limit=50', token);
+        if (playlistsData?.items && playlistsData.items.length > 0) {
+          for (const pl of playlistsData.items) {
+            if (pl && pl.id) {
+              try {
+                const plTracksData = await querySpotifyApi(`https://api.spotify.com/v1/playlists/${pl.id}/tracks?limit=100`, token);
+                if (plTracksData?.items) {
+                  plTracksData.items.forEach((item: any) => {
+                    const t = item.track || item;
+                    if (t && t.name && t.artists) {
+                      userTracks.push(t);
+                    }
+                  });
+                }
+              } catch (e) {
+                console.warn(`Playlist ${pl.id} tracks warning:`, e);
               }
-            } catch (e) {
-              console.warn(`Playlist ${pl.id} track fetch warning:`, e);
             }
           }
         }
+      } catch (e) {
+        console.warn("Playlists fetch notice:", e);
       }
 
-      // Deduplicate user tracks by Spotify ID
+      // Deduplicate user tracks by Spotify ID or Title-Artist key
       const uniqueUserTracksMap = new Map();
       userTracks.forEach((t) => {
-        if (t && t.id && t.name && t.artists) {
-          uniqueUserTracksMap.set(t.id, t);
+        if (t && t.name && t.artists && t.artists.length > 0) {
+          const key = t.id || `${t.name}-${t.artists[0].name}`;
+          uniqueUserTracksMap.set(key, t);
         }
       });
       const uniqueUserTracks = Array.from(uniqueUserTracksMap.values());
@@ -234,11 +260,11 @@ export const getRandomTrack = async (
         // Filter out tracks already issued today to prevent daily duplicates!
         let candidateTracks = uniqueUserTracks;
         if (todayTrackKeys.length > 0) {
-          const filtered = uniqueUserTracks.filter(
-            (t) =>
-              !todayTrackKeys.includes(t.id) &&
-              !todayTrackKeys.includes(`${t.name}-${t.artists?.[0]?.name}`)
-          );
+          const filtered = uniqueUserTracks.filter((t) => {
+            const trackId = t.id;
+            const trackKey = `${t.name}-${t.artists?.[0]?.name}`;
+            return !todayTrackKeys.includes(trackId) && !todayTrackKeys.includes(trackKey);
+          });
           if (filtered.length > 0) {
             candidateTracks = filtered;
           }
@@ -248,7 +274,7 @@ export const getRandomTrack = async (
         const randTrack: any = candidateTracks[Math.floor(Math.random() * candidateTracks.length)];
         const artistName = randTrack.artists.map((a: any) => a.name).join(', ');
         
-        let cover = randTrack.album?.images[0]?.url;
+        let cover = randTrack.album?.images?.[0]?.url;
         let preview = randTrack.preview_url;
 
         if (!cover || cover.includes("unsplash") || !preview) {
@@ -267,7 +293,7 @@ export const getRandomTrack = async (
         };
       }
     } catch (err: any) {
-      console.warn("Spotify library/playlist request error, using fallback catalog...", err);
+      console.warn("Spotify library/playlist request error:", err);
     }
   }
 
