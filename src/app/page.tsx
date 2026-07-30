@@ -21,7 +21,8 @@ import {
   Unlock,
   ChevronLeft,
   ChevronRight,
-  Volume2
+  Volume2,
+  Cloud
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
@@ -65,7 +66,9 @@ export default function Home() {
     geminiKey,
     aiPersona,
     settingsPasscode,
+    syncCode,
     isHydrated,
+    isSyncing,
     setActiveTab,
     addCard,
     deleteCard,
@@ -74,6 +77,8 @@ export default function Home() {
     setGeminiKey,
     setAiPersona,
     setSettingsPasscode,
+    setSyncCode,
+    syncWithCloud,
     clearHistory,
     hydrate
   } = useStore();
@@ -257,14 +262,16 @@ export default function Home() {
   // Config Input fields
   const [tempClientId, setTempClientId] = useState("");
   const [tempGeminiKey, setTempGeminiKey] = useState("");
+  const [tempSyncCode, setTempSyncCode] = useState("");
 
   // Keep input fields synchronized with store state once hydrated
   useEffect(() => {
     if (isHydrated) {
       setTempClientId(spotifyClientId);
       setTempGeminiKey(geminiKey);
+      setTempSyncCode(syncCode);
     }
-  }, [isHydrated, spotifyClientId, geminiKey]);
+  }, [isHydrated, spotifyClientId, geminiKey, syncCode]);
 
   // Generate Music Card Handler
   const handleCreateCard = async () => {
@@ -423,9 +430,14 @@ export default function Home() {
         <motion.div 
           initial={{ opacity: 0, y: -10 }} 
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-baseline"
+          className="flex flex-col items-center gap-1"
         >
           <h1 className="text-3xl font-black tracking-widest text-zinc-100 font-sans">MOMENTUNE</h1>
+          {/* Cloud Sync indicator chip */}
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-400 mt-1">
+            <Cloud className={`h-3 w-3 ${isSyncing ? "text-blue-400 animate-spin" : "text-emerald-400"}`} />
+            <span>클라우드 동기화 코드: <code className="text-blue-300 font-mono">{syncCode}</code></span>
+          </div>
         </motion.div>
       </header>
 
@@ -853,7 +865,7 @@ export default function Home() {
                     />
                     <button
                       onClick={handleCreatePasscode}
-                      className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow hover:bg-blue-750 transition"
+                      className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow hover:bg-blue-755 transition"
                     >
                       비밀번호 등록 및 설정 열기
                     </button>
@@ -901,6 +913,59 @@ export default function Home() {
                     >
                       다시 잠그기
                     </button>
+                  </div>
+
+                  {/* Cloud Sync Panel */}
+                  <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Cloud className="h-5 w-5 text-blue-400" />
+                        <h3 className="text-sm font-bold text-zinc-200">기기 간 실시간 클라우드 동기화</h3>
+                      </div>
+                      {isSyncing && (
+                        <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> 동기화 중...
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-zinc-400 mb-3.5 leading-relaxed">
+                      사파리, 크롬, 모바일 기기에서 동일한 동기화 코드를 사용하면 발급받은 카드 기록이 실시간으로 모두 연속 동기화됩니다.
+                    </p>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={tempSyncCode}
+                        onChange={(e) => setTempSyncCode(e.target.value)}
+                        placeholder="동기화 코드 (예: SUA-7892)"
+                        className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white uppercase tracking-wider font-mono focus:outline-none focus:border-blue-500/50"
+                      />
+                      <button
+                        onClick={() => {
+                          setSyncCode(tempSyncCode);
+                          alert(`동기화 코드가 [${tempSyncCode}]로 연결되었습니다!`);
+                        }}
+                        className="rounded-xl bg-blue-600 px-4 text-xs font-bold text-white hover:bg-blue-700 transition shadow-sm"
+                      >
+                        동기화 연결
+                      </button>
+                    </div>
+
+                    <div className="mt-3 flex justify-between items-center text-[10px] border-t border-white/10 pt-2.5">
+                      <span className="text-zinc-500 font-medium">
+                        현재 코드: <code className="text-blue-300 font-bold font-mono bg-black/40 px-1.5 py-0.5 rounded">{syncCode}</code>
+                      </span>
+                      <button
+                        onClick={() => {
+                          syncWithCloud();
+                          alert("클라우드에서 최신 카드를 불러와 동기화했습니다!");
+                        }}
+                        className="text-blue-400 font-bold underline hover:text-blue-300"
+                      >
+                        지금 즉시 동기화 (Sync Now)
+                      </button>
+                    </div>
                   </div>
 
                   {/* Spotify config panel */}

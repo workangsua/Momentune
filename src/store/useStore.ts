@@ -12,8 +12,10 @@ interface StoreState {
   geminiKey: string;
   aiPersona: AIPersona;
   settingsPasscode: string | null;
+  syncCode: string;
   isHydrated: boolean;
-  
+  isSyncing: boolean;
+
   // Actions
   setActiveTab: (tab: 'today' | 'history' | 'settings') => void;
   addCard: (card: MusicCard) => void;
@@ -23,6 +25,8 @@ interface StoreState {
   setGeminiKey: (key: string) => void;
   setAiPersona: (persona: AIPersona) => void;
   setSettingsPasscode: (passcode: string | null) => void;
+  setSyncCode: (code: string) => void;
+  syncWithCloud: () => Promise<void>;
   clearHistory: () => void;
   
   // Archive Logic
@@ -39,6 +43,12 @@ export const getLocalDateKey = (dateInput?: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
+// Generate random sync code (e.g. SUA-7892)
+const generateRandomSyncCode = () => {
+  const num = Math.floor(1000 + Math.random() * 9000);
+  return `SUA-${num}`;
+};
+
 export const useStore = create<StoreState>((set, get) => ({
   todayCards: [],
   historyCards: [],
@@ -50,7 +60,9 @@ export const useStore = create<StoreState>((set, get) => ({
   geminiKey: '',
   aiPersona: 'emotional',
   settingsPasscode: null,
+  syncCode: 'SUA-7892',
   isHydrated: false,
+  isSyncing: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
 
@@ -60,6 +72,8 @@ export const useStore = create<StoreState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
     }
+    // Push update to cloud sync API
+    get().syncWithCloud();
   },
 
   deleteCard: (id, isHistory) => {
@@ -76,6 +90,8 @@ export const useStore = create<StoreState>((set, get) => ({
         localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
       }
     }
+    // Push update to cloud sync API
+    get().syncWithCloud();
   },
 
   setSpotifyClientId: (clientId) => {
@@ -97,6 +113,8 @@ export const useStore = create<StoreState>((set, get) => ({
       if (user) localStorage.setItem('momentune_spotify_user', user);
       else localStorage.removeItem('momentune_spotify_user');
     }
+    // Sync with cloud using Spotify user ID
+    get().syncWithCloud();
   },
 
   setGeminiKey: (key) => {
@@ -116,28 +134,88 @@ export const useStore = create<StoreState>((set, get) => ({
   setSettingsPasscode: (passcode) => {
     set({ settingsPasscode: passcode });
     if (typeof window !== 'undefined') {
-      if (passcode) localStorage.setItem('momentune_settings_passcode', passcode);
-      else localStorage.removeItem('momentune_settings_passcode');
+      if (passcode) localStorage.setItem('momentune_passcode', passcode);
+      else localStorage.removeItem('momentune_passcode');
+    }
+  },
+
+  setSyncCode: (code) => {
+    const trimmed = code.trim() || 'SUA-7892';
+    set({ syncCode: trimmed });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('momentune_sync_code', trimmed);
+    }
+    get().syncWithCloud();
+  },
+
+  syncWithCloud: async () => {
+    const code = get().spotifyUser ? `user_${get().spotifyUser}` : get().syncCode;
+    if (!code) return;
+
+    set({ isSyncing: true });
+    try {
+      // 1. Fetch cloud cards
+      const res = await fetch(`/api/sync?code=${encodeURIComponent(code)}`);
+      if (res.ok) {
+        const data = await res.json();
+        const cloudToday: MusicCard[] = data.todayCards || [];
+        const cloudHistory: MusicCard[] = data.historyCards || [];
+
+        const localToday = get().todayCards;
+        const localHistory = get().historyCards;
+
+        // Merge & deduplicate by card ID
+        const todayMap = new Map<string, MusicCard>();
+        [...localToday, ...cloudToday].forEach((c) => todayMap.set(c.id, c));
+        const mergedToday = Array.from(todayMap.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        const historyMap = new Map<string, MusicCard>();
+        [...localHistory, ...cloudHistory].forEach((c) => historyMap.set(c.id, c));
+        const mergedHistory = Array.from(historyMap.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        set({ todayCards: mergedToday, historyCards: mergedHistory });
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('momentune_today_cards', JSON.stringify(mergedToday));
+          localStorage.setItem('momentune_history_cards', JSON.stringify(mergedHistory));
+        }
+
+        // 2. Push merged state back to cloud
+        await fetch('/api/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, todayCards: mergedToday, historyCards: mergedHistory }),
+        });
+      }
+    } catch (err) {
+      console.warn("Cloud sync warning:", err);
+    } finally {
+      set({ isSyncing: false });
     }
   },
 
   clearHistory: () => {
     set({ historyCards: [] });
     if (typeof window !== 'undefined') {
-      localStorage.setItem('momentune_history_cards', JSON.stringify([]));
+      localStorage.removeItem('momentune_history_cards');
     }
+    get().syncWithCloud();
   },
 
   archiveOldCards: () => {
-    const todayStr = getLocalDateKey();
-    const todayList = get().todayCards;
-    const historyList = get().historyCards;
+    const today = getLocalDateKey();
+    const currentTodayCards = get().todayCards;
+    const currentHistoryCards = get().historyCards;
 
     const cardsToKeep: MusicCard[] = [];
     const cardsToArchive: MusicCard[] = [];
 
-    todayList.forEach((card) => {
-      if (card.dateKey === todayStr) {
+    currentTodayCards.forEach((card) => {
+      if (card.dateKey === today) {
         cardsToKeep.push(card);
       } else {
         cardsToArchive.push(card);
@@ -145,14 +223,10 @@ export const useStore = create<StoreState>((set, get) => ({
     });
 
     if (cardsToArchive.length > 0) {
-      // Append older cards to history
-      const newHistory = [...cardsToArchive, ...historyList];
-      // Sort history by date descending
-      newHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
+      const newHistory = [...cardsToArchive, ...currentHistoryCards];
       set({
         todayCards: cardsToKeep,
-        historyCards: newHistory
+        historyCards: newHistory,
       });
 
       if (typeof window !== 'undefined') {
@@ -163,40 +237,47 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   hydrate: () => {
-    if (typeof window === 'undefined' || get().isHydrated) return;
+    if (typeof window === 'undefined') return;
 
     try {
-      const todayCardsRaw = localStorage.getItem('momentune_today_cards');
-      const historyCardsRaw = localStorage.getItem('momentune_history_cards');
-      const spotifyClientId = localStorage.getItem('momentune_spotify_client_id') || '';
-      const spotifyToken = localStorage.getItem('momentune_spotify_token');
-      const spotifyRefreshToken = localStorage.getItem('momentune_spotify_refresh_token');
-      const spotifyUser = localStorage.getItem('momentune_spotify_user');
-      const geminiKey = localStorage.getItem('momentune_gemini_key') || '';
-      const aiPersona = (localStorage.getItem('momentune_ai_persona') as AIPersona) || 'emotional';
-      const settingsPasscode = localStorage.getItem('momentune_settings_passcode') || null;
-
-      const todayCards: MusicCard[] = todayCardsRaw ? JSON.parse(todayCardsRaw) : [];
-      const historyCards: MusicCard[] = historyCardsRaw ? JSON.parse(historyCardsRaw) : [];
+      const storedToday = localStorage.getItem('momentune_today_cards');
+      const storedHistory = localStorage.getItem('momentune_history_cards');
+      const storedClientId = localStorage.getItem('momentune_spotify_client_id');
+      const storedToken = localStorage.getItem('momentune_spotify_token');
+      const storedRefreshToken = localStorage.getItem('momentune_spotify_refresh_token');
+      const storedUser = localStorage.getItem('momentune_spotify_user');
+      const storedGeminiKey = localStorage.getItem('momentune_gemini_key');
+      const storedPersona = localStorage.getItem('momentune_ai_persona');
+      const storedPasscode = localStorage.getItem('momentune_passcode');
+      
+      let storedSyncCode = localStorage.getItem('momentune_sync_code');
+      if (!storedSyncCode) {
+        storedSyncCode = generateRandomSyncCode();
+        localStorage.setItem('momentune_sync_code', storedSyncCode);
+      }
 
       set({
-        todayCards,
-        historyCards,
-        spotifyClientId,
-        spotifyToken,
-        spotifyRefreshToken,
-        spotifyUser,
-        geminiKey,
-        aiPersona,
-        settingsPasscode,
-        isHydrated: true
+        todayCards: storedToday ? JSON.parse(storedToday) : [],
+        historyCards: storedHistory ? JSON.parse(storedHistory) : [],
+        spotifyClientId: storedClientId || '',
+        spotifyToken: storedToken || null,
+        spotifyRefreshToken: storedRefreshToken || null,
+        spotifyUser: storedUser || null,
+        geminiKey: storedGeminiKey || '',
+        aiPersona: (storedPersona as AIPersona) || 'emotional',
+        settingsPasscode: storedPasscode || null,
+        syncCode: storedSyncCode,
+        isHydrated: true,
       });
 
-      // Run archive check right after hydration
+      // Run automatic date archiving
       get().archiveOldCards();
+
+      // Trigger cloud sync to pull cards from Safari/Chrome
+      get().syncWithCloud();
     } catch (e) {
-      console.error('Failed to hydrate state', e);
+      console.error("Hydration error:", e);
       set({ isHydrated: true });
     }
-  }
+  },
 }));
