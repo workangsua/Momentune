@@ -999,10 +999,10 @@ export default function Home() {
                         </div>
                       )}
 
-                      <div className="mt-2 text-[10px] text-zinc-450 bg-black/30 rounded-xl p-3.5 border border-white/5 leading-relaxed font-mono">
-                        <span className="text-zinc-200 font-bold block mb-1.5 font-sans">Supabase SQL Editor에서 실행할 쿼리문 (아래 코드만 전체 복사):</span>
+                      <div className="mt-2 text-[10px] text-zinc-455 bg-black/30 rounded-xl p-3.5 border border-white/5 leading-relaxed font-mono">
+                        <span className="text-zinc-200 font-bold block mb-1.5 font-sans">Supabase SQL Editor에서 실행할 쿼리문 (아래 코드만 복사):</span>
                         <pre className="text-emerald-400 font-mono select-all bg-black/50 p-2.5 rounded-lg border border-emerald-500/20 whitespace-pre-wrap">
-{`create table music_cards (
+{`create table if not exists music_cards (
   id uuid primary key,
   created_at timestamptz default now(),
   date_key text,
