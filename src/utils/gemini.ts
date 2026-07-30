@@ -36,9 +36,15 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
 export const generateAIReason = async (
   context: { movement: string; activity: string; weather: string; mood: string },
   track: { title: string; artist: string },
-  persona: AIPersona,
-  geminiKey: string | null
+  persona: AIPersona = 'emotional',
+  apiKey?: string | null
 ): Promise<string> => {
+  const geminiKey =
+    apiKey ||
+    (typeof window !== 'undefined' ? localStorage.getItem('momentune_gemini_key') : null) ||
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+    process.env.GEMINI_API_KEY;
+
   const contextTags = [
     context.movement && `이동: ${context.movement}`,
     context.activity && `활동: ${context.activity}`,
@@ -51,7 +57,6 @@ export const generateAIReason = async (
   // If no Gemini API Key is configured, use local fallback logic
   if (!geminiKey) {
     const list = FALLBACK_REASONS[persona] || FALLBACK_REASONS.emotional;
-    // Draw semi-randomly based on mood string code or random index
     const seed = (context.mood.charCodeAt(0) || 0) + (context.activity.charCodeAt(0) || 0);
     const index = seed % list.length;
     return list[index];
@@ -130,7 +135,6 @@ export const generateAIReason = async (
     return resultText.trim();
   } catch (error) {
     console.error("Gemini API call failed, using fallback:", error);
-    // Vibe fallback in case of errors
     const list = FALLBACK_REASONS[persona] || FALLBACK_REASONS.emotional;
     const index = Math.floor(Math.random() * list.length);
     return list[index];
