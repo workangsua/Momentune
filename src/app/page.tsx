@@ -23,7 +23,8 @@ import {
   ChevronRight,
   Volume2,
   Database,
-  RefreshCw
+  RefreshCw,
+  Cloud
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata, testSpotifyConnection } from "../utils/spotify";
@@ -1061,6 +1062,23 @@ export default function Home() {
                           설정 저장 및 동기화
                         </button>
                       </div>
+
+                      {/* Explicit Local-to-Cloud Migration Button */}
+                      <button
+                        onClick={async () => {
+                          if (!tempSbUrl || !tempSbKey) {
+                            alert("Supabase URL과 Anon Key를 먼저 입력해 주세요.");
+                            return;
+                          }
+                          setSupabaseConfig(tempSbUrl, tempSbKey);
+                          await syncWithCloud();
+                          alert("🎉 로컬에 생성되어 있던 모든 음악 카드가 Supabase DB로 업로드/동기화 되었습니다!");
+                        }}
+                        className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 py-3 text-xs font-bold text-blue-300 hover:bg-blue-500/20 transition shadow-sm"
+                      >
+                        <Cloud className="h-4 w-4" />
+                        로컬 ➔ Supabase DB로 모든 카드 업로드 (마이그레이션)
+                      </button>
 
                       {/* Connection Diagnostic Message Banner */}
                       {testResult && (
