@@ -32,36 +32,41 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
   ]
 };
 
-// Diagnostic test for Gemini API Connection targeting Google's primary endpoints
+// Official Google Gemini REST API endpoints for v1beta & v1
+const GEMINI_ENDPOINTS = [
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
+  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
+];
+
+// Diagnostic test for Gemini API Connection targeting v1beta Gemini 1.5 & 2.0 endpoints
 export const testGeminiConnection = async (apiKey?: string | null): Promise<{ success: boolean; message: string }> => {
-  const geminiKey =
+  const rawKey =
     apiKey ||
     (typeof window !== 'undefined' ? localStorage.getItem('momentune_gemini_key') : null) ||
     process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
     process.env.GEMINI_API_KEY;
 
-  if (!geminiKey || !geminiKey.trim()) {
+  if (!rawKey || !rawKey.trim()) {
     return { success: false, message: "Gemini API Key가 입력되지 않았습니다. 설정 탭의 Gemini API Key에 키를 입력하고 [저장]을 눌러주세요." };
   }
 
-  const cleanKey = geminiKey.trim();
-
-  const endpoints = [
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
-    "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
-  ];
+  // Sanitize key (strip quotes, newlines, spaces)
+  const cleanKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
   let lastErrorMsg = "";
 
-  for (const endpointUrl of endpoints) {
+  for (const endpointUrl of GEMINI_ENDPOINTS) {
     try {
       const response = await fetch(`${endpointUrl}?key=${encodeURIComponent(cleanKey)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: "Hello" }] }],
-          generationConfig: { maxOutputTokens: 10 }
+          contents: [{ parts: [{ text: "Hello Gemini" }] }],
+          generationConfig: { maxOutputTokens: 15 }
         })
       });
 
@@ -69,7 +74,8 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) {
-          return { success: true, message: `✅ Gemini AI 실시간 연결 완료! (정상 작동 확인)` };
+          const modelName = endpointUrl.split('/models/')[1]?.split(':')[0] || 'Gemini 1.5';
+          return { success: true, message: `✅ Gemini AI 실시간 연결 완료! (버전: v1beta / 모델: ${modelName})` };
         }
       } else {
         const errJson = await response.json().catch(() => null);
@@ -78,7 +84,7 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
 
         // If HTTP 400, 401, 403 API Key Error, return immediately
         if (response.status === 400 || response.status === 401 || response.status === 403) {
-          return { success: false, message: `❌ Gemini API 키 에러: ${lastErrorMsg}` };
+          return { success: false, message: `❌ Gemini API 키 오류: ${lastErrorMsg}` };
         }
       }
     } catch (e: any) {
@@ -102,7 +108,7 @@ export const generateAIReason = async (
     process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
     process.env.GEMINI_API_KEY;
 
-  const geminiKey = rawKey ? rawKey.trim() : null;
+  const geminiKey = rawKey ? rawKey.trim().replace(/^["']|["']$/g, '') : null;
 
   const contextTags = [
     context.movement && `이동: ${context.movement}`,
@@ -154,13 +160,7 @@ export const generateAIReason = async (
 4. 마크다운 기호(예: **, ##)는 절대 사용하지 마세요. 완성된 본문 문구만 바로 출력하세요.
 `;
 
-  const endpoints = [
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
-    "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
-  ];
-
-  for (const endpointUrl of endpoints) {
+  for (const endpointUrl of GEMINI_ENDPOINTS) {
     try {
       const response = await fetch(`${endpointUrl}?key=${encodeURIComponent(geminiKey)}`, {
         method: 'POST',
