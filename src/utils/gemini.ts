@@ -32,6 +32,48 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
   ]
 };
 
+// Diagnostic test for Gemini API Connection
+export const testGeminiConnection = async (apiKey?: string | null): Promise<{ success: boolean; message: string }> => {
+  const geminiKey =
+    apiKey ||
+    (typeof window !== 'undefined' ? localStorage.getItem('momentune_gemini_key') : null) ||
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
+    process.env.GEMINI_API_KEY;
+
+  if (!geminiKey) {
+    return { success: false, message: "Gemini API Key가 입력되지 않았습니다. 설정 탭의 Gemini API Key에 키를 입력하고 [저장]을 눌러주세요." };
+  }
+
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "테스트 인사 한 줄" }] }],
+            generationConfig: { maxOutputTokens: 30 }
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          return { success: true, message: `✅ Gemini AI 실시간 연결 완료! (${model} 모델 실시간 작동 중)` };
+        }
+      }
+    } catch (e) {
+      console.warn(`Model ${model} test failed:`, e);
+    }
+  }
+
+  return { success: false, message: "❌ Gemini API Key가 유효하지 않거나 실패했습니다. Google AI Studio에서 키를 재발급 받아 입력해 주세요." };
+};
+
 // Generate AI Reason via Gemini API or Fallback Templates
 export const generateAIReason = async (
   context: { movement: string; activity: string; weather: string; mood: string },
@@ -95,48 +137,51 @@ export const generateAIReason = async (
 4. 마크다운 기호(예: **, ##)는 절대 사용하지 마세요. 완성된 본문 문구만 바로 출력하세요.
 `;
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
+  // Models to try in sequence
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: prompt
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              maxOutputTokens: 200,
+              temperature: 0.75
             }
-          ],
-          generationConfig: {
-            maxOutputTokens: 150,
-            temperature: 0.75
-          }
-        })
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (resultText) {
+          return resultText.trim();
+        }
       }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+    } catch (error) {
+      console.warn(`Gemini API call with ${model} failed:`, error);
     }
-
-    const data = await response.json();
-    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!resultText) {
-      throw new Error("Empty content returned from Gemini API");
-    }
-
-    return resultText.trim();
-  } catch (error) {
-    console.error("Gemini API call failed, using fallback:", error);
-    const list = FALLBACK_REASONS[persona] || FALLBACK_REASONS.emotional;
-    const index = Math.floor(Math.random() * list.length);
-    return list[index];
   }
+
+  // Fallback if all API calls fail
+  const list = FALLBACK_REASONS[persona] || FALLBACK_REASONS.emotional;
+  const index = Math.floor(Math.random() * list.length);
+  return list[index];
 };

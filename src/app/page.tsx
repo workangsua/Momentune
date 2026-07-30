@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata, testSpotifyConnection } from "../utils/spotify";
-import { generateAIReason } from "../utils/gemini";
+import { generateAIReason, testGeminiConnection } from "../utils/gemini";
 import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl, getCurrentPlaySessionId } from "../utils/audio";
 import { testSupabaseConnection } from "../utils/supabase";
 import { MusicCard, AIPersona } from "../types";
@@ -303,6 +303,18 @@ export default function Home() {
     const res = await testSpotifyConnection(spotifyToken);
     setSpotifyTestResult(res);
     setIsTestingSpotify(false);
+  };
+
+  // Gemini Diagnostic Test state
+  const [geminiTestResult, setGeminiTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [isTestingGemini, setIsTestingGemini] = useState(false);
+
+  const handleTestGemini = async () => {
+    setIsTestingGemini(true);
+    setGeminiTestResult(null);
+    const res = await testGeminiConnection(tempGeminiKey || geminiKey);
+    setGeminiTestResult(res);
+    setIsTestingGemini(false);
   };
 
   // Keep input fields synchronized with store state once hydrated
@@ -1201,6 +1213,28 @@ alter table music_cards disable row level security;`}
                             <AlertCircle className="h-3 w-3" /> 키 미입력 상태 (테스트 데모 큐레이션 제공)
                           </span>
                         )}
+
+                        {/* Gemini Diagnostic API Connection Test Button */}
+                        <div className="mt-3 flex flex-col gap-2">
+                          <button
+                            onClick={handleTestGemini}
+                            disabled={isTestingGemini}
+                            className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 py-2.5 text-xs font-bold text-indigo-300 hover:bg-indigo-500/20 transition disabled:opacity-40"
+                          >
+                            {isTestingGemini ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                            Gemini AI 연동 테스트
+                          </button>
+
+                          {geminiTestResult && (
+                            <div className={`p-3 rounded-xl border text-[11px] leading-relaxed font-semibold ${
+                              geminiTestResult.success 
+                                ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-300"
+                                : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                            }`}>
+                              {geminiTestResult.message}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Persona settings */}
