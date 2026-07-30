@@ -301,7 +301,10 @@ export default function Home() {
     setGenerationStep("스포티파이 데이터베이스 탐색 중...");
 
     try {
-      // 1. Fetch Spotify Track
+      // Collect today's existing track IDs/titles to prevent daily duplicates
+      const existingTrackKeys = todayCards.map((c) => c.track.id || `${c.track.title}-${c.track.artist}`);
+
+      // 1. Fetch Spotify Track (Filtering out tracks issued today)
       const track = await getRandomTrack(
         {
           movement: currentSub.movement,
@@ -309,7 +312,8 @@ export default function Home() {
           weather: selectedWeather,
           mood: selectedMood,
         },
-        spotifyToken
+        spotifyToken,
+        existingTrackKeys
       );
 
       setGenerationStep("Gemini AI와 노래 추천 이유 싱크 중...");
@@ -1255,9 +1259,22 @@ alter table music_cards disable row level security;`}
                 </button>
               )}
 
-              <div className="flex items-center gap-2 mb-6">
-                <Compass className="h-5 w-5 text-blue-500" />
-                <h3 className="text-base font-bold text-zinc-200">현재의 소리 기록하기</h3>
+              <div className="flex items-center justify-between mb-6 pr-8">
+                <div className="flex items-center gap-2">
+                  <Compass className="h-5 w-5 text-blue-500" />
+                  <h3 className="text-base font-bold text-zinc-200">현재의 소리 기록하기</h3>
+                </div>
+
+                {/* Real-time Spotify Connection Status Badge inside Modal */}
+                {spotifyToken ? (
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                    <Check className="h-3 w-3" /> 내 플리 연동됨
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-yellow-400 font-bold bg-yellow-500/10 border border-yellow-500/30 px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                    <AlertCircle className="h-3 w-3" /> Spotify 미연동
+                  </span>
+                )}
               </div>
 
               {isGenerating ? (

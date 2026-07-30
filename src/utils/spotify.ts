@@ -184,7 +184,8 @@ export const querySpotifyApi = async (url: string, token: string) => {
 // Fetch track recommendations strictly from user's registered playlists & library
 export const getRandomTrack = async (
   context: { movement: string; activity: string; weather: string; mood: string },
-  token: string | null
+  token: string | null,
+  todayTrackKeys: string[] = []
 ): Promise<MusicCard['track']> => {
   if (token) {
     try {
@@ -230,8 +231,21 @@ export const getRandomTrack = async (
       const uniqueUserTracks = Array.from(uniqueUserTracksMap.values());
 
       if (uniqueUserTracks.length > 0) {
+        // Filter out tracks already issued today to prevent daily duplicates!
+        let candidateTracks = uniqueUserTracks;
+        if (todayTrackKeys.length > 0) {
+          const filtered = uniqueUserTracks.filter(
+            (t) =>
+              !todayTrackKeys.includes(t.id) &&
+              !todayTrackKeys.includes(`${t.name}-${t.artists?.[0]?.name}`)
+          );
+          if (filtered.length > 0) {
+            candidateTracks = filtered;
+          }
+        }
+
         // Pick a random track strictly from user's registered playlists/library!
-        const randTrack: any = uniqueUserTracks[Math.floor(Math.random() * uniqueUserTracks.length)];
+        const randTrack: any = candidateTracks[Math.floor(Math.random() * candidateTracks.length)];
         const artistName = randTrack.artists.map((a: any) => a.name).join(', ');
         
         let cover = randTrack.album?.images[0]?.url;
@@ -257,8 +271,18 @@ export const getRandomTrack = async (
     }
   }
 
-  // Fallback: Select from famous user-favorite playlist catalog
-  const randTrack = FALLBACK_TRACKS[Math.floor(Math.random() * FALLBACK_TRACKS.length)];
+  // Fallback: Select from famous user-favorite playlist catalog (filtering out today's issued tracks!)
+  let candidateFallback = FALLBACK_TRACKS;
+  if (todayTrackKeys.length > 0) {
+    const filtered = FALLBACK_TRACKS.filter(
+      (t) => !todayTrackKeys.includes(`${t.title}-${t.artist}`)
+    );
+    if (filtered.length > 0) {
+      candidateFallback = filtered;
+    }
+  }
+
+  const randTrack = candidateFallback[Math.floor(Math.random() * candidateFallback.length)];
   const meta = await fetchSongMetadata(randTrack.artist, randTrack.title);
 
   return {
