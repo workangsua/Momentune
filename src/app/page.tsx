@@ -381,79 +381,79 @@ export default function Home() {
                             }}
                             className="absolute w-full max-w-[310px] overflow-visible"
                           >
-                            {/* Visual Card Body matching User's Mockup */}
-                            <div className="bg-[#121620]/90 border border-white/10 rounded-[32px] flex flex-col relative overflow-hidden shadow-[0_0_25px_rgba(0,140,255,0.25)] backdrop-blur-xl z-10">
-                              
-                              {/* Top Half: Dark Container with Rounded Album Cover Image */}
-                              <div className="p-4 flex flex-col bg-transparent">
-                                <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
-                                  <img
-                                    src={card.track.albumCover}
-                                    alt="Album Cover"
-                                    className="h-full w-full object-cover"
-                                  />
-                                  
-                                  {/* Situation chips overlay on top-left */}
-                                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                                    {Object.values(card.context).map((tag, tIdx) => tag && (
-                                      <span
-                                        key={tIdx}
-                                        className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-zinc-350 font-bold"
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
-                                  </div>
+                            {/* Glowing Blue Backdrop Blob (Creates smooth glowing blue aura behind card & bottom button) */}
+                            <div className="absolute bottom-[-10px] inset-x-2 h-64 rounded-[36px] bg-gradient-to-t from-blue-600/70 via-blue-500/40 to-transparent blur-2xl pointer-events-none -z-10" />
 
-                                  {/* Stamp overlay on bottom-right */}
-                                  <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
-                                    <span className="text-[9px] text-zinc-300 font-bold font-mono">
-                                      {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                            {/* Single Unified Frosted Glass Card Panel */}
+                            <div className="relative z-10 bg-white/5 border border-white/15 rounded-[32px] p-4 pb-6 flex flex-col overflow-hidden shadow-2xl backdrop-blur-2xl">
+                              {/* Internal Soft Blue Color Blend Layer */}
+                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/15 to-blue-600/55 pointer-events-none -z-10" />
+
+                              {/* Large Album Cover Image */}
+                              <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/10 shadow-inner bg-black/20">
+                                <img
+                                  src={card.track.albumCover}
+                                  alt="Album Cover"
+                                  className="h-full w-full object-cover"
+                                />
+                                
+                                {/* Situation chips overlay on top-left */}
+                                <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                                  {Object.values(card.context).map((tag, tIdx) => tag && (
+                                    <span
+                                      key={tIdx}
+                                      className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-zinc-300 font-bold"
+                                    >
+                                      {tag}
                                     </span>
-                                  </div>
+                                  ))}
+                                </div>
+
+                                {/* Stamp overlay on bottom-right */}
+                                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
+                                  <span className="text-[9px] text-zinc-300 font-bold font-mono">
+                                    {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
                                 </div>
                               </div>
 
-                              {/* Bottom Half: Solid Sky/Royal Blue Block housing Metadata & AI Reason */}
-                              <div className="bg-gradient-to-b from-[#0091ff] to-[#0055ff] p-5 pb-6 flex flex-col flex-grow text-left rounded-b-[30px] border-t border-white/10 relative overflow-hidden">
-                                {/* Subtle inner glow for depth */}
-                                <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-white/15 blur-xl pointer-events-none" />
-                                
-                                <div className="flex justify-between items-start gap-4 z-10">
+                              {/* Title & Artist - Softly Blended over Glass & Blue Glow */}
+                              <div className="mt-5 px-1 flex flex-col text-left">
+                                <div className="flex justify-between items-start gap-4">
                                   <div className="min-w-0 flex-1">
-                                    <h4 className="text-xl font-extrabold text-white truncate tracking-tight">{card.track.title}</h4>
-                                    <p className="text-xs text-blue-100 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
+                                    <h4 className="text-xl font-extrabold text-white truncate tracking-tight drop-shadow-sm">{card.track.title}</h4>
+                                    <p className="text-xs text-blue-300 font-bold tracking-wide uppercase mt-1 drop-shadow-sm">{card.track.artist}</p>
                                   </div>
                                   <button
                                     onClick={() => {
                                       deleteCard(card.id, false);
                                       if (activeIndex > 0) setActiveIndex(activeIndex - 1);
                                     }}
-                                    className="text-white/70 hover:text-white transition p-1.5 rounded-full hover:bg-white/10"
+                                    className="text-zinc-400 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/10"
                                     title="카드 삭제"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </button>
                                 </div>
 
-                                {/* AI Curated Reason - Stripped of quotes */}
-                                <div className="mt-4 pt-3.5 border-t border-white/20 z-10">
-                                  <p className="text-xs text-white/95 leading-relaxed font-semibold">
+                                {/* AI Curated Reason - Soft Divider */}
+                                <div className="mt-4 pt-3.5 border-t border-white/10">
+                                  <p className="text-xs text-zinc-200 leading-relaxed font-semibold drop-shadow-sm">
                                     {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
                                   </p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Protruding Spotify Pill Button (Snug, centered, blue matching mockup) */}
+                            {/* Spotify Play Button: Frosted Glass Pill overlaying glowing blue aura */}
                             <a
                               href={card.track.spotifyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="relative z-10 -mt-2 mx-8 h-10 rounded-b-2xl bg-[#0055ff] hover:bg-[#0044dd] flex items-center justify-center shadow-lg transition duration-200 border-t border-white/10 cursor-pointer"
+                              className="relative z-20 -mt-3 mx-8 h-11 rounded-b-2xl bg-white/15 hover:bg-white/25 backdrop-blur-xl border-x border-b border-white/20 border-t border-white/10 flex items-center justify-center shadow-xl transition duration-300 cursor-pointer"
                             >
-                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
-                                <Music className="h-3.5 w-3.5 animate-pulse" />
+                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm">
+                                <Music className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
                                 <span>SPOTIFY PLAY</span>
                                 <ExternalLink className="h-3 w-3 opacity-80" />
                               </div>
@@ -571,52 +571,51 @@ export default function Home() {
                         <div className="flex flex-col gap-8">
                           {cards.map((card) => (
                             <div key={card.id} className="relative group overflow-visible">
-                              
-                              {/* Visual Card Body */}
-                              <div className="bg-[#121620]/90 border border-white/10 rounded-[32px] flex flex-col relative overflow-hidden shadow-[0_0_25px_rgba(0,140,255,0.25)] backdrop-blur-xl z-10">
-                                
-                                {/* Top Half: Album Cover */}
-                                <div className="p-4 flex flex-col bg-transparent">
-                                  <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
-                                    <img
-                                      src={card.track.albumCover}
-                                      alt="Album Cover"
-                                      className="h-full w-full object-cover"
-                                    />
-                                    
-                                    {/* chips */}
-                                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                                      {Object.values(card.context).map((tag, tIdx) => tag && (
-                                        <span
-                                          key={tIdx}
-                                          className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
-                                        >
-                                          {tag}
-                                        </span>
-                                      ))}
-                                    </div>
+                              {/* Glowing Blue Backdrop Blob */}
+                              <div className="absolute bottom-[-10px] inset-x-2 h-64 rounded-[36px] bg-gradient-to-t from-blue-600/70 via-blue-500/40 to-transparent blur-2xl pointer-events-none -z-10" />
 
-                                    {/* stamp */}
-                                    <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
-                                      <span className="text-[9px] text-zinc-300 font-bold font-mono">
-                                        {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                              {/* Single Unified Frosted Glass Card Panel */}
+                              <div className="relative z-10 bg-white/5 border border-white/15 rounded-[32px] p-4 pb-6 flex flex-col overflow-hidden shadow-2xl backdrop-blur-2xl">
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/15 to-blue-600/55 pointer-events-none -z-10" />
+
+                                {/* Album Cover */}
+                                <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/10 shadow-inner bg-black/20">
+                                  <img
+                                    src={card.track.albumCover}
+                                    alt="Album Cover"
+                                    className="h-full w-full object-cover"
+                                  />
+                                  
+                                  {/* chips */}
+                                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                                    {Object.values(card.context).map((tag, tIdx) => tag && (
+                                      <span
+                                        key={tIdx}
+                                        className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-zinc-300 font-bold"
+                                      >
+                                        {tag}
                                       </span>
-                                    </div>
+                                    ))}
+                                  </div>
+
+                                  {/* stamp */}
+                                  <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
+                                    <span className="text-[9px] text-zinc-300 font-bold font-mono">
+                                      {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
                                   </div>
                                 </div>
 
-                                {/* Bottom Half: Blue Container */}
-                                <div className="bg-gradient-to-b from-[#0091ff] to-[#0055ff] p-5 pb-6 flex flex-col flex-grow text-left rounded-b-[30px] border-t border-white/10 relative overflow-hidden">
-                                  <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-white/15 blur-xl pointer-events-none" />
-
-                                  <div className="flex justify-between items-start gap-4 z-10">
+                                {/* Title & Artist */}
+                                <div className="mt-5 px-1 flex flex-col text-left">
+                                  <div className="flex justify-between items-start gap-4">
                                     <div className="min-w-0 flex-1">
-                                      <h4 className="text-xl font-extrabold text-white truncate tracking-tight">{card.track.title}</h4>
-                                      <p className="text-xs text-blue-100 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
+                                      <h4 className="text-xl font-extrabold text-white truncate tracking-tight drop-shadow-sm">{card.track.title}</h4>
+                                      <p className="text-xs text-blue-300 font-bold tracking-wide uppercase mt-1 drop-shadow-sm">{card.track.artist}</p>
                                     </div>
                                     <button
                                       onClick={() => deleteCard(card.id, true)}
-                                      className="text-white/70 hover:text-white transition p-1.5 rounded-full hover:bg-white/10"
+                                      className="text-zinc-400 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/10"
                                       title="카드 삭제"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -624,23 +623,23 @@ export default function Home() {
                                   </div>
 
                                   {/* AI Curated Reason */}
-                                  <div className="mt-4 pt-3.5 border-t border-white/20 z-10">
-                                    <p className="text-xs text-white/95 leading-relaxed font-semibold">
+                                  <div className="mt-4 pt-3.5 border-t border-white/10">
+                                    <p className="text-xs text-zinc-200 leading-relaxed font-semibold drop-shadow-sm">
                                       {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
                                     </p>
                                   </div>
                                 </div>
                               </div>
 
-                              {/* Protruding Spotify Pill */}
+                              {/* Spotify Play Button */}
                               <a
                                 href={card.track.spotifyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="relative z-10 -mt-2 mx-8 h-10 rounded-b-2xl bg-[#0055ff] hover:bg-[#0044dd] flex items-center justify-center shadow-lg transition duration-200 border-t border-white/10 cursor-pointer"
+                                className="relative z-20 -mt-3 mx-8 h-11 rounded-b-2xl bg-white/15 hover:bg-white/25 backdrop-blur-xl border-x border-b border-white/20 border-t border-white/10 flex items-center justify-center shadow-xl transition duration-300 cursor-pointer"
                               >
-                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
-                                  <Music className="h-3.5 w-3.5 animate-pulse" />
+                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm">
+                                  <Music className="h-3.5 w-3.5 text-blue-400 animate-pulse" />
                                   <span>SPOTIFY PLAY</span>
                                   <ExternalLink className="h-3 w-3 opacity-80" />
                                 </div>
@@ -674,7 +673,7 @@ export default function Home() {
                     <Lock className="h-6 w-6" />
                   </div>
                   <h3 className="text-base font-bold text-zinc-200">개인정보 설정 잠금 비밀번호 등록</h3>
-                  <p className="text-xs text-zinc-450 mt-2 leading-relaxed px-4">
+                  <p className="text-xs text-zinc-455 mt-2 leading-relaxed px-4">
                     설정에 들어갈 수 있는 비밀번호를 생성해 주세요.<br />
                     등록한 스포티파이 ID와 Gemini API Key 정보를 보호합니다.
                   </p>
@@ -786,7 +785,7 @@ export default function Home() {
                               redirectToSpotifyAuth(tempClientId);
                             }}
                             disabled={!tempClientId}
-                            className="w-full rounded-xl bg-emerald-500 py-3 text-xs font-bold text-white shadow-sm shadow-emerald-500/10 hover:bg-emerald-650 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-xl bg-emerald-500 py-3 text-xs font-bold text-white shadow-sm shadow-emerald-500/10 hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Spotify 로그인 연동
                           </button>
