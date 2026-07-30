@@ -441,7 +441,7 @@ export default function Home() {
         <div className="absolute bottom-[-25%] right-[-25%] w-[80vw] h-[80vw] rounded-full bg-indigo-650/8 blur-[130px]" />
       </div>
 
-      {/* Clean Header Logo (Chips completely removed) */}
+      {/* Clean Header Logo */}
       <header className="mb-8 flex flex-col items-center text-center px-4 z-10">
         <motion.div 
           initial={{ opacity: 0, y: -10 }} 
@@ -1000,18 +1000,19 @@ export default function Home() {
                       )}
 
                       <div className="mt-2 text-[10px] text-zinc-450 bg-black/30 rounded-xl p-3.5 border border-white/5 leading-relaxed font-mono">
-                        <span className="text-zinc-200 font-bold block mb-1 font-sans">※ Supabase 테이블 및 RLS 해제 SQL 스니펫:</span>
-                        <span className="text-emerald-400 font-semibold block mb-1">-- 1. music_cards 테이블 생성</span>
-                        create table music_cards (<br />
-                        &nbsp;&nbsp;id uuid primary key,<br />
-                        &nbsp;&nbsp;created_at timestamptz default now(),<br />
-                        &nbsp;&nbsp;date_key text,<br />
-                        &nbsp;&nbsp;context jsonb,<br />
-                        &nbsp;&nbsp;track jsonb,<br />
-                        &nbsp;&nbsp;ai_reason text<br />
-                        );<br /><br />
-                        <span className="text-emerald-400 font-semibold block mb-1">-- 2. RLS (보안 권한) 해제 (어디서든 읽기/쓰기 가능)</span>
-                        alter table music_cards disable row level security;
+                        <span className="text-zinc-200 font-bold block mb-1.5 font-sans">Supabase SQL Editor에서 실행할 쿼리문 (아래 코드만 전체 복사):</span>
+                        <pre className="text-emerald-400 font-mono select-all bg-black/50 p-2.5 rounded-lg border border-emerald-500/20 whitespace-pre-wrap">
+{`create table music_cards (
+  id uuid primary key,
+  created_at timestamptz default now(),
+  date_key text,
+  context jsonb,
+  track jsonb,
+  ai_reason text
+);
+
+alter table music_cards disable row level security;`}
+                        </pre>
                       </div>
                     </div>
                   </div>
