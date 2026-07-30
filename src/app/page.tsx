@@ -155,12 +155,64 @@ export default function Home() {
     setActiveIndex(0);
   }, [todayCards.length]);
 
-  // Context Selector Modal State
+  // Hierarchical Context Selector Modal State
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-  const [selectedMovement, setSelectedMovement] = useState<string>("");
+  
+  // Top-Level Parent Situation Categories
+  const parentSituations = [
+    { id: "commute_morning", label: "아침 / 출근 이동", emoji: "🌅" },
+    { id: "commute_evening", label: "퇴근 / 야간 이동", emoji: "🌃" },
+    { id: "workout_drive", label: "운동 / 드라이브", emoji: "🏃" },
+    { id: "rest_work", label: "휴식 / 작업 / 집", emoji: "☕" }
+  ];
+
+  const [selectedParentId, setSelectedParentId] = useState<string>("commute_morning");
   const [selectedActivity, setSelectedActivity] = useState<string>("");
   const [selectedWeather, setSelectedWeather] = useState<string>("");
   const [selectedMood, setSelectedMood] = useState<string>("");
+
+  // Dynamic Sub-options based on top-level parent situation selection
+  const getSubOptions = (parentId: string) => {
+    switch (parentId) {
+      case "commute_evening":
+        return {
+          movement: "퇴근/저녁 이동",
+          activities: ["지하철/버스", "야간 드라이브", "집 걸어가는 길", "퇴근길 산책"],
+          weathers: ["시원한 밤바람", "꿉꿉한 밤", "쏟아지는 비", "밤눈"],
+          moods: ["녹초가 됨", "해방감/신남", "센치함/우울", "멍때리기"]
+        };
+      case "workout_drive":
+        return {
+          movement: "여행/드라이브",
+          activities: ["런닝/유산소", "웨이트", "고속도로 드라이브", "해안가 산책"],
+          weathers: ["햇살 쨍쨍", "바람 부는 날", "비 오는 날", "시원한 날"],
+          moods: ["에너지 뿜뿜", "비트 타기", "신남", "스트레스 해소"]
+        };
+      case "rest_work":
+        return {
+          movement: "휴식/집",
+          activities: ["침대 누워있기", "작업/공부", "집안일", "책/커피"],
+          weathers: ["아늑한 맑음", "창밖 비 소리", "눈 오는 창가", "꿉꿉한 실내"],
+          moods: ["차분함", "몽환적", "센치함/우울", "피곤함"]
+        };
+      case "commute_morning":
+      default:
+        return {
+          movement: "출근/아침 이동",
+          activities: ["대중교통", "자차 운전", "모닝 산책", "편의점 커피"],
+          weathers: ["상쾌한 맑음", "쌀쌀함", "흐림/비", "눈/겨울"],
+          moods: ["피곤함/몽롱", "비장함/파이팅", "센치함", "차분함"]
+        };
+    }
+  };
+
+  // Reset sub selections when top parent category changes
+  const handleParentSelect = (id: string) => {
+    setSelectedParentId(id);
+    setSelectedActivity("");
+    setSelectedWeather("");
+    setSelectedMood("");
+  };
   
   // Generating Music Card Loading State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -168,12 +220,6 @@ export default function Home() {
 
   // History filter
   const [historyFilterTag, setHistoryFilterTag] = useState<string>("");
-
-  // Context Options definitions
-  const movementOptions = ["출근/아침 이동", "퇴근/저녁 이동", "산책", "여행/드라이브"];
-  const activityOptions = ["운동", "작업/공부", "휴식", "집안일", "멍때리기"];
-  const weatherOptions = ["맑음", "흐림", "비", "눈", "꿉꿉함/습함"];
-  const moodOptions = ["신남/에너지", "차분함", "몽환적", "센치함/우울", "피곤함"];
 
   // Config Input fields
   const [tempClientId, setTempClientId] = useState("");
@@ -189,8 +235,9 @@ export default function Home() {
 
   // Generate Music Card Handler
   const handleCreateCard = async () => {
-    if (!selectedMovement || !selectedActivity || !selectedWeather || !selectedMood) {
-      alert("모든 상태 항목을 하나씩 선택해 주세요!");
+    const currentSub = getSubOptions(selectedParentId);
+    if (!selectedActivity || !selectedWeather || !selectedMood) {
+      alert("하위 옵션(활동, 날씨, 기분)을 모두 하나씩 선택해 주세요!");
       return;
     }
 
@@ -201,7 +248,7 @@ export default function Home() {
       // 1. Fetch Spotify Track
       const track = await getRandomTrack(
         {
-          movement: selectedMovement,
+          movement: currentSub.movement,
           activity: selectedActivity,
           weather: selectedWeather,
           mood: selectedMood,
@@ -214,7 +261,7 @@ export default function Home() {
       // 2. Fetch AI Reason
       const aiReason = await generateAIReason(
         {
-          movement: selectedMovement,
+          movement: currentSub.movement,
           activity: selectedActivity,
           weather: selectedWeather,
           mood: selectedMood,
@@ -230,7 +277,7 @@ export default function Home() {
         createdAt: new Date().toISOString(),
         dateKey: getLocalDateKey(),
         context: {
-          movement: selectedMovement,
+          movement: currentSub.movement,
           activity: selectedActivity,
           weather: selectedWeather,
           mood: selectedMood,
@@ -244,7 +291,6 @@ export default function Home() {
 
       // Close modal & reset selection
       setIsSelectorOpen(false);
-      setSelectedMovement("");
       setSelectedActivity("");
       setSelectedWeather("");
       setSelectedMood("");
@@ -328,6 +374,8 @@ export default function Home() {
       </div>
     );
   }
+
+  const currentSubOptions = getSubOptions(selectedParentId);
 
   return (
     <div className="flex min-h-screen flex-col items-center pb-32 pt-10 relative">
@@ -1025,7 +1073,7 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* MODAL: Context Selector Step-by-Step */}
+      {/* MODAL: Hierarchical Context Selector (Parent -> Child Dynamic Flow) */}
       <AnimatePresence>
         {isSelectorOpen && (
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
@@ -1065,93 +1113,106 @@ export default function Home() {
                   <p className="text-xs text-zinc-500 mt-2 tracking-wide font-medium">{generationStep}</p>
                 </div>
               ) : (
-                // Step selections
-                <div className="flex flex-col gap-5 pb-6">
-                  {/* Category 1: Movement */}
+                // Hierarchical Selection Steps
+                <div className="flex flex-col gap-6 pb-6">
+                  {/* Step 1: Top Parent Situation Selection */}
                   <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">1. 어디로 가고 있나요? (이동)</span>
-                    <div className="flex flex-wrap gap-2">
-                      {movementOptions.map((opt) => (
+                    <span className="block text-xs font-bold text-zinc-300 mb-2.5">
+                      1. 메인 상황을 선택하세요 (상위 카테고리)
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {parentSituations.map((sit) => (
                         <button
-                          key={opt}
-                          onClick={() => setSelectedMovement(opt)}
-                          className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
-                            selectedMovement === opt
-                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                          key={sit.id}
+                          onClick={() => handleParentSelect(sit.id)}
+                          className={`rounded-2xl border p-3.5 text-left transition ${
+                            selectedParentId === sit.id
+                              ? "bg-blue-600 border-blue-500 text-white font-bold shadow-lg shadow-blue-600/20"
+                              : "bg-white/5 border-white/10 text-zinc-400 hover:bg-white/10"
                           }`}
                         >
-                          {opt}
+                          <div className="text-base mb-1">{sit.emoji}</div>
+                          <div className="text-xs font-extrabold">{sit.label}</div>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Category 2: Activity */}
-                  <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">2. 무엇을 하고 있나요? (활동)</span>
-                    <div className="flex flex-wrap gap-2">
-                      {activityOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => setSelectedActivity(opt)}
-                          className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
-                            selectedActivity === opt
-                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                  {/* Step 2: Dynamic Child Sub-Options (Changes based on Step 1 selection!) */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-5 backdrop-blur-md">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                      <span className="text-[11px] font-extrabold text-blue-400 tracking-wider">
+                        {parentSituations.find(p => p.id === selectedParentId)?.emoji} {parentSituations.find(p => p.id === selectedParentId)?.label} 세부 설정
+                      </span>
+                      <span className="text-[10px] text-zinc-500 font-bold">상위 선택에 따른 하위 옵션</span>
                     </div>
-                  </div>
 
-                  {/* Category 3: Weather */}
-                  <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">3. 바깥 날씨는 어떤가요? (날씨)</span>
-                    <div className="flex flex-wrap gap-2">
-                      {weatherOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => setSelectedWeather(opt)}
-                          className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
-                            selectedWeather === opt
-                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                    {/* Sub-Category: Activity */}
+                    <div>
+                      <span className="block text-xs font-bold text-zinc-400 mb-2">2. 세부 활동</span>
+                      <div className="flex flex-wrap gap-2">
+                        {currentSubOptions.activities.map((act) => (
+                          <button
+                            key={act}
+                            onClick={() => setSelectedActivity(act)}
+                            className={`rounded-xl border px-3 py-2 text-xs transition font-semibold ${
+                              selectedActivity === act
+                                ? "bg-blue-500 border-blue-500 text-white font-bold shadow-sm"
+                                : "bg-black/30 border-white/10 text-zinc-400 hover:bg-white/10"
+                            }`}
+                          >
+                            {act}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Category 4: Mood */}
-                  <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">4. 지금 마음은 어떤가요? (기분)</span>
-                    <div className="flex flex-wrap gap-2">
-                      {moodOptions.map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => setSelectedMood(opt)}
-                          className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
-                            selectedMood === opt
-                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
+                    {/* Sub-Category: Weather */}
+                    <div>
+                      <span className="block text-xs font-bold text-zinc-400 mb-2">3. 세부 날씨</span>
+                      <div className="flex flex-wrap gap-2">
+                        {currentSubOptions.weathers.map((w) => (
+                          <button
+                            key={w}
+                            onClick={() => setSelectedWeather(w)}
+                            className={`rounded-xl border px-3 py-2 text-xs transition font-semibold ${
+                              selectedWeather === w
+                                ? "bg-blue-500 border-blue-500 text-white font-bold shadow-sm"
+                                : "bg-black/30 border-white/10 text-zinc-400 hover:bg-white/10"
+                            }`}
+                          >
+                            {w}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sub-Category: Mood */}
+                    <div>
+                      <span className="block text-xs font-bold text-zinc-400 mb-2">4. 세부 기분</span>
+                      <div className="flex flex-wrap gap-2">
+                        {currentSubOptions.moods.map((m) => (
+                          <button
+                            key={m}
+                            onClick={() => setSelectedMood(m)}
+                            className={`rounded-xl border px-3 py-2 text-xs transition font-semibold ${
+                              selectedMood === m
+                                ? "bg-blue-500 border-blue-500 text-white font-bold shadow-sm"
+                                : "bg-black/30 border-white/10 text-zinc-400 hover:bg-white/10"
+                            }`}
+                          >
+                            {m}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
                   {/* Submit CTA */}
                   <button
                     onClick={handleCreateCard}
-                    disabled={!selectedMovement || !selectedActivity || !selectedWeather || !selectedMood}
-                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-755 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
+                    disabled={!selectedActivity || !selectedWeather || !selectedMood}
+                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-755 transition disabled:opacity-40 disabled:cursor-not-allowed mt-2 shadow-md shadow-blue-600/20"
                   >
                     AI 큐레이션 카드 추천받기
                   </button>
