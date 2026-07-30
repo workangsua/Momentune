@@ -54,7 +54,7 @@ export const generateAIReason = async (
     // Draw semi-randomly based on mood string code or random index
     const seed = (context.mood.charCodeAt(0) || 0) + (context.activity.charCodeAt(0) || 0);
     const index = seed % list.length;
-    return `[데모 모드] ${list[index]}\n(${track.artist} - ${track.title}에 어울리는 추천 이유)`;
+    return list[index];
   }
 
   // Persona instructions
@@ -78,6 +78,10 @@ export const generateAIReason = async (
 [출력 페르소나 스타일]
 - 페르소나 이름: ${persona.toUpperCase()}
 - 지침: ${personaInstructions[persona]}
+
+[중요 요청 사항 - 음악 및 가사 연결]
+1. 추천하는 곡의 **음악적 템포/비트/빠르기**를 고려해 주세요. (예: 피곤할 때 빠른 템포면 기운을 돋아주고, 우울할 때 느린 템포면 감정을 흘려보내는 등)
+2. 특히 이 곡의 **가사(Lyrics)가 가진 메시지, 감정선, 핵심 가사 구절**을 파악하여, 유저의 상황(이동, 활동, 날씨, 기분)과 연결해 '왜 지금 들어야 하는지' 설명해 주세요. (가사 관련 묘사를 구체적으로 녹이면 더욱 좋습니다.)
 
 [작성 규칙]
 1. 2줄에서 최대 3줄로 작성해 주세요. 줄바꿈을 적절히 섞어 가독성을 높여주세요.
@@ -129,6 +133,6 @@ export const generateAIReason = async (
     // Vibe fallback in case of errors
     const list = FALLBACK_REASONS[persona] || FALLBACK_REASONS.emotional;
     const index = Math.floor(Math.random() * list.length);
-    return `[Gemini 오류로 데모 생성] ${list[index]}`;
+    return list[index];
   }
 };

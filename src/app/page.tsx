@@ -226,18 +226,18 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center pb-28 pt-8">
+    <div className="flex min-h-screen flex-col items-center pb-32 pt-8">
       {/* Header Logo */}
-      <header className="mb-8 flex flex-col items-center text-center px-4">
+      <header className="mb-6 flex flex-col items-center text-center px-4">
         <motion.div 
           initial={{ opacity: 0, y: -10 }} 
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2"
+          className="flex items-baseline gap-1"
         >
-          <Music className="h-6 w-6 text-indigo-400" />
-          <h1 className="text-2xl font-bold tracking-wider text-gradient">MOMENTUNE</h1>
+          <h1 className="text-2xl font-black tracking-wider text-zinc-100 font-sans">MOMENTUNE</h1>
+          <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">Beta</span>
         </motion.div>
-        <p className="text-xs text-zinc-500 mt-1">당일의 순간을 기록하는 AI 맥락 음악 카드</p>
+        <p className="text-xs text-zinc-500 mt-1.5 font-medium">당일의 순간을 담은 프리미엄 음악 티켓</p>
       </header>
 
       {/* Main Container */}
@@ -254,140 +254,140 @@ export default function Home() {
             >
               {todayCards.length === 0 ? (
                 // Welcome screen if empty
-                <div className="flex-1 flex flex-col items-center justify-center text-center py-16 px-4">
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-20 px-4">
                   <div className="relative mb-6">
                     <div className="absolute -inset-1 rounded-full bg-indigo-500/20 blur-xl"></div>
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-indigo-500/30 bg-[#09090b]">
-                      <Compass className="h-10 w-10 text-indigo-400 animate-pulse" />
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900 shadow-xl">
+                      <Music className="h-8 w-8 text-indigo-400 animate-pulse" />
                     </div>
                   </div>
-                  <h2 className="text-xl font-bold text-zinc-200">지금 이 순간의 음악</h2>
-                  <p className="text-sm text-zinc-400 mt-2 max-w-xs leading-relaxed">
-                    이동, 활동, 날씨, 기분을 기록하고<br />
-                    AI가 추천하는 감성 음악 카드를 생성해 보세요.
+                  <h2 className="text-xl font-bold text-zinc-200">나의 하루를 음악 카드로</h2>
+                  <p className="text-xs text-zinc-400 mt-2 max-w-xs leading-relaxed">
+                    이동, 활동, 날씨, 기분을 조율해 보세요.<br />
+                    AI가 오늘 들어야 하는 감성 티켓 카드를 발급합니다.
                   </p>
                   
                   <button
                     onClick={() => setIsSelectorOpen(true)}
-                    className="mt-8 flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:from-indigo-600 hover:to-indigo-700 transition duration-300"
+                    className="mt-8 flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 transition duration-300"
                   >
                     <Plus className="h-4 w-4" />
-                    내 상태 기록하고 음악 카드 받기
+                    내 상태 기록하고 음악 카드 발급
                   </button>
                 </div>
               ) : (
                 // Timeline of today's cards
                 <div className="flex flex-col gap-6">
-                  {/* Floating CTA */}
-                  <div className="flex justify-between items-center bg-white/5 border border-white/5 rounded-2xl p-4 mb-2">
+                  {/* Summary Bar */}
+                  <div className="flex justify-between items-center bg-zinc-900/60 border border-zinc-800/60 rounded-2xl p-4 mb-2">
                     <div>
-                      <h3 className="text-sm font-semibold text-zinc-300">오늘 쌓은 카드</h3>
-                      <p className="text-xs text-zinc-500 mt-0.5">자정에 자동으로 기록 보관함으로 이동합니다.</p>
+                      <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
+                      <p className="text-[10px] text-zinc-500 mt-0.5">자정이 지나면 자동으로 HISTORY 보관소로 이동합니다.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500 text-white shadow hover:bg-indigo-600 transition"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white shadow hover:bg-indigo-700 transition"
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-4.5 w-4.5" />
                     </button>
                   </div>
 
                   {/* Cards list */}
-                  <div className="flex flex-col gap-8 relative border-l border-zinc-800 ml-4 pl-6">
-                    {todayCards.map((card, idx) => (
+                  <div className="flex flex-col gap-10">
+                    {todayCards.map((card) => (
                       <motion.div
                         key={card.id}
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="relative group"
                       >
-                        {/* Timeline Bullet */}
-                        <div className="absolute -left-[31px] top-4 h-3.5 w-3.5 rounded-full border border-zinc-700 bg-zinc-950 flex items-center justify-center">
-                          <div className="h-1.5 w-1.5 rounded-full bg-indigo-400"></div>
-                        </div>
+                        {/* Premium Ticket Card Body */}
+                        <div className="bg-[#161618] border border-zinc-800/80 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                          
+                          {/* Inner soft-canvas visual block */}
+                          <div className="aspect-square w-full rounded-2xl bg-[#e3e0d5] p-5 flex flex-col justify-between relative shadow-inner overflow-hidden">
+                            {/* Top part of canvas: context chips */}
+                            <div className="flex flex-wrap gap-1">
+                              {Object.values(card.context).map((tag, tIdx) => tag && (
+                                <span
+                                  key={tIdx}
+                                  className="inline-block rounded-full bg-black/5 border border-black/5 px-2.5 py-0.5 text-[9px] text-[#5c5643] font-bold"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
 
-                        {/* Card Wrapper */}
-                        <div className="glass-panel rounded-3xl p-5 relative overflow-hidden transition hover:border-zinc-700/60 shadow-xl">
-                          {/* Top row: tags and delete */}
-                          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                            <span className="text-[10px] text-zinc-500 font-mono">
-                              {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <button
-                              onClick={() => deleteCard(card.id, false)}
-                              className="text-zinc-600 hover:text-red-400 transition p-1 rounded"
-                              title="카드 삭제"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-
-                          {/* Chips Container */}
-                          <div className="flex flex-wrap gap-1.5 mb-5">
-                            {Object.values(card.context).map((tag, tIdx) => tag && (
-                              <span
-                                key={tIdx}
-                                className="inline-block rounded-full bg-white/5 border border-white/5 px-2.5 py-0.5 text-[10px] text-zinc-400 font-medium"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Vinyl Record & Track details */}
-                          <div className="flex items-center gap-4 bg-black/25 rounded-2xl p-3 border border-white/5 mb-5">
-                            {/* Spinning Vinyl Record Mock */}
-                            <a
-                              href={card.track.spotifyUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="relative h-16 w-16 flex-shrink-0 cursor-pointer group/vinyl"
-                              title="스포티파이에서 재생"
-                            >
-                              {/* Vinyl grooves */}
-                              <div className="absolute inset-0 rounded-full bg-[#111] border border-zinc-800 shadow-md record-spin flex items-center justify-center">
-                                <div className="h-12 w-12 rounded-full border border-zinc-900 bg-[#1e1e1e] flex items-center justify-center">
-                                  {/* Center core */}
-                                  <div className="h-4 w-4 rounded-full bg-[#111] border-2 border-zinc-700 flex items-center justify-center">
-                                    <div className="h-1 w-1 rounded-full bg-white"></div>
+                            {/* Center of canvas: Album cover art with turntable detail */}
+                            <div className="relative flex flex-col items-center justify-center my-auto">
+                              <div className="relative h-28 w-28 flex-shrink-0 shadow-lg rounded-full overflow-hidden record-spin border border-black/10">
+                                <img
+                                  src={card.track.albumCover}
+                                  alt="Cover"
+                                  className="h-full w-full object-cover"
+                                />
+                                {/* Vinyl center cutout */}
+                                <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
+                                  <div className="h-6 w-6 rounded-full bg-[#1c1c1c] border-2 border-[#e3e0d5] flex items-center justify-center">
+                                    <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
                                   </div>
                                 </div>
                               </div>
-                              {/* Album cover clipped at center */}
-                              <img
-                                src={card.track.albumCover}
-                                alt="Cover"
-                                className="absolute inset-2 h-12 w-12 rounded-full object-cover record-spin shadow-inner border border-black/40 group-hover/vinyl:scale-105 transition duration-300"
-                              />
-                              {/* Hover play icon overlay */}
-                              <div className="absolute inset-2 h-12 w-12 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover/vinyl:opacity-100 transition duration-300">
-                                <Play className="h-4 w-4 text-white fill-white" />
-                              </div>
-                            </a>
+                            </div>
 
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold text-zinc-200 truncate">{card.track.title}</h4>
-                              <p className="text-xs text-zinc-400 truncate mt-0.5">{card.track.artist}</p>
-                              
-                              <a
-                                href={card.track.spotifyUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 mt-2 hover:underline"
-                              >
-                                Spotify에서 듣기 <ExternalLink className="h-2.5 w-2.5" />
-                              </a>
+                            {/* Bottom part of canvas: meta indicators */}
+                            <div className="flex justify-between items-end border-t border-[#c5c1b2] pt-2.5 mt-2">
+                              <span className="text-[9px] text-[#78725d] font-bold font-mono uppercase tracking-wider">
+                                MOMENTUNE STAMP
+                              </span>
+                              <span className="text-[9px] text-[#78725d] font-bold font-mono">
+                                {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                              </span>
                             </div>
                           </div>
 
-                          {/* AI Recommendation Reason */}
-                          <div className="relative bg-indigo-500/5 rounded-2xl p-4 border border-indigo-500/10">
-                            <Sparkles className="absolute right-3.5 top-3.5 h-4 w-4 text-indigo-400/30" />
-                            <p className="text-xs text-zinc-300 leading-relaxed font-medium whitespace-pre-line">
-                              {card.aiReason}
-                            </p>
+                          {/* Metadata row (Title, Artist, Delete) */}
+                          <div className="mt-5 px-1">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
+                                <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">{card.track.artist}</p>
+                              </div>
+                              <button
+                                onClick={() => deleteCard(card.id, false)}
+                                className="text-zinc-600 hover:text-red-400 transition p-1 rounded-full hover:bg-white/5"
+                                title="카드 삭제"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            {/* AI Curated Reason */}
+                            <div className="mt-4 pt-3.5 border-t border-zinc-800/80">
+                              <p className="text-xs text-zinc-300 leading-relaxed font-semibold italic text-zinc-300 whitespace-pre-line">
+                                "{card.aiReason}"
+                              </p>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Protruding Ticket Stub (Spotify button with notches) */}
+                        <a
+                          href={card.track.spotifyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                        >
+                          {/* Cutout punch notches */}
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#030303] border-r border-zinc-950"></div>
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#030303] border-l border-zinc-950"></div>
+
+                          <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
+                            <Music className="h-3.5 w-3.5 animate-bounce" />
+                            <span>SPOTIFY PLAY</span>
+                            <ExternalLink className="h-3 w-3 opacity-80" />
+                          </div>
+                        </a>
                       </motion.div>
                     ))}
                   </div>
@@ -403,29 +403,29 @@ export default function Home() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col animate-fadeIn"
             >
               {historyCards.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center py-20 px-4">
-                  <Archive className="h-10 w-10 text-zinc-600 mb-4" />
-                  <h2 className="text-lg font-bold text-zinc-300">보관된 기록 없음</h2>
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-24 px-4">
+                  <Archive className="h-10 w-10 text-zinc-650 mb-4" />
+                  <h2 className="text-base font-bold text-zinc-350">보관된 티켓이 없습니다</h2>
                   <p className="text-xs text-zinc-500 mt-1 max-w-xs leading-relaxed">
-                    오늘이 지나 자정이 되면,<br />
-                    작성된 카드들이 자동으로 날짜별 보관함에 들어옵니다.
+                    오늘이 지나 자정이 지나면,<br />
+                    작성된 티켓들이 자동으로 보관함에 보관됩니다.
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-6">
-                  {/* Filter bar */}
-                  <div className="bg-white/5 border border-white/5 rounded-2xl p-4">
-                    <h3 className="text-xs font-semibold text-zinc-400 mb-3">태그별 필터링</h3>
+                  {/* Vibe filter pills */}
+                  <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-2xl p-4">
+                    <h3 className="text-[10px] font-bold text-zinc-550 uppercase tracking-widest mb-3">태그 필터</h3>
                     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
                       <button
                         onClick={() => setHistoryFilterTag("")}
-                        className={`rounded-full px-3 py-1 text-xs transition ${
+                        className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
                           !historyFilterTag
-                            ? "bg-indigo-600 text-white font-medium shadow"
-                            : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10"
+                            ? "bg-indigo-600 text-white shadow-md"
+                            : "bg-zinc-800/60 text-zinc-400 border border-zinc-800/40 hover:bg-zinc-800"
                         }`}
                       >
                         전체
@@ -434,10 +434,10 @@ export default function Home() {
                         <button
                           key={tag}
                           onClick={() => setHistoryFilterTag(tag)}
-                          className={`rounded-full px-3 py-1 text-xs transition ${
+                          className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
                             historyFilterTag === tag
-                              ? "bg-indigo-600 text-white font-medium shadow"
-                              : "bg-white/5 text-zinc-400 border border-white/5 hover:bg-white/10"
+                              ? "bg-indigo-600 text-white shadow-md"
+                              : "bg-zinc-800/60 text-zinc-400 border border-zinc-800/40 hover:bg-zinc-800"
                           }`}
                         >
                           {tag}
@@ -446,63 +446,97 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Grouped lists */}
-                  <div className="flex flex-col gap-8">
+                  {/* Grouped Lists */}
+                  <div className="flex flex-col gap-10">
                     {Object.entries(getGroupedHistory()).map(([date, cards]) => (
-                      <div key={date} className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+                      <div key={date} className="flex flex-col gap-5">
+                        <div className="flex items-center gap-2 border-b border-zinc-800 pb-2 ml-1">
                           <Calendar className="h-3.5 w-3.5 text-indigo-400" />
-                          <span className="text-xs font-bold tracking-wide text-zinc-300 font-mono">{date}</span>
-                          <span className="text-[10px] text-zinc-500">({cards.length}곡)</span>
+                          <span className="text-xs font-black tracking-wider text-zinc-300 font-mono">{date}</span>
+                          <span className="text-[10px] text-zinc-500 font-bold">({cards.length})</span>
                         </div>
 
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-8">
                           {cards.map((card) => (
-                            <div
-                              key={card.id}
-                              className="glass-panel rounded-2xl p-4 border border-zinc-800/40 relative shadow-md"
-                            >
-                              <div className="flex items-start justify-between gap-4 mb-3">
-                                <div>
-                                  <h4 className="text-sm font-bold text-zinc-200">{card.track.title}</h4>
-                                  <p className="text-xs text-zinc-400">{card.track.artist}</p>
+                            <div key={card.id} className="relative group">
+                              <div className="bg-[#161618] border border-zinc-800/80 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                                
+                                {/* Inner visual */}
+                                <div className="aspect-square w-full rounded-2xl bg-[#e3e0d5] p-5 flex flex-col justify-between relative shadow-inner overflow-hidden">
+                                  <div className="flex flex-wrap gap-1">
+                                    {Object.values(card.context).map((tag, tIdx) => tag && (
+                                      <span
+                                        key={tIdx}
+                                        className="inline-block rounded-full bg-black/5 border border-black/5 px-2.5 py-0.5 text-[9px] text-[#5c5643] font-bold"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+
+                                  <div className="relative flex flex-col items-center justify-center my-auto">
+                                    <div className="relative h-24 w-24 flex-shrink-0 shadow-lg rounded-full overflow-hidden record-spin border border-black/10">
+                                      <img
+                                        src={card.track.albumCover}
+                                        alt="Cover"
+                                        className="h-full w-full object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
+                                        <div className="h-5 w-5 rounded-full bg-[#1c1c1c] border border-[#e3e0d5] flex items-center justify-center">
+                                          <div className="h-1 w-1 rounded-full bg-white"></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-between items-end border-t border-[#c5c1b2] pt-2.5 mt-2">
+                                    <span className="text-[9px] text-[#78725d] font-bold font-mono uppercase tracking-wider">
+                                      ARCHIVE STAMP
+                                    </span>
+                                    <span className="text-[9px] text-[#78725d] font-bold font-mono">
+                                      {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <a
-                                    href={card.track.spotifyUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-1 rounded bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 transition"
-                                    title="Spotify에서 열기"
-                                  >
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                  </a>
-                                  <button
-                                    onClick={() => deleteCard(card.id, true)}
-                                    className="p-1 rounded bg-zinc-800/50 hover:bg-zinc-850 text-zinc-400 hover:text-red-400 transition"
-                                    title="삭제"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+
+                                <div className="mt-5 px-1">
+                                  <div className="flex justify-between items-start gap-4">
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
+                                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-medium">{card.track.artist}</p>
+                                    </div>
+                                    <button
+                                      onClick={() => deleteCard(card.id, true)}
+                                      className="text-zinc-650 hover:text-red-400 transition p-1 rounded-full hover:bg-white/5"
+                                      title="카드 삭제"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+
+                                  <div className="mt-4 pt-3.5 border-t border-zinc-800/80">
+                                    <p className="text-xs text-zinc-300 leading-relaxed font-semibold italic text-zinc-350 whitespace-pre-line">
+                                      "{card.aiReason}"
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
 
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {Object.values(card.context).map((tag, tIdx) => tag && (
-                                  <span
-                                    key={tIdx}
-                                    className="rounded bg-white/5 px-2 py-0.5 text-[9px] text-zinc-400 border border-white/5"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
+                              <a
+                                href={card.track.spotifyUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                              >
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#030303] border-r border-zinc-950"></div>
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#030303] border-l border-zinc-950"></div>
 
-                              <div className="bg-zinc-950/40 rounded-xl p-3 border border-white/5">
-                                <p className="text-xs text-zinc-400 leading-relaxed italic whitespace-pre-line">
-                                  {card.aiReason}
-                                </p>
-                              </div>
+                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
+                                  <Music className="h-3.5 w-3.5 animate-bounce" />
+                                  <span>SPOTIFY PLAY</span>
+                                  <ExternalLink className="h-3 w-3 opacity-80" />
+                                </div>
+                              </a>
                             </div>
                           ))}
                         </div>
@@ -523,8 +557,8 @@ export default function Home() {
               exit={{ opacity: 0, x: 10 }}
               className="flex-1 flex flex-col gap-6"
             >
-              {/* Spotify PKCE config */}
-              <div className="glass-panel rounded-3xl p-5 shadow-lg border border-zinc-800/50">
+              {/* Spotify config panel */}
+              <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-3xl p-5 shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
                   <Music className="h-5 w-5 text-emerald-400" />
                   <h3 className="text-sm font-bold text-zinc-200">Spotify 계정 연동</h3>
@@ -532,33 +566,33 @@ export default function Home() {
 
                 <div className="flex flex-col gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
                       Spotify Client ID
                     </label>
                     <input
                       type="text"
                       value={tempClientId}
                       onChange={(e) => setTempClientId(e.target.value)}
-                      placeholder="Spotify Developer Client ID"
-                      className="w-full rounded-xl bg-black/40 border border-zinc-800 px-3.5 py-2.5 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-indigo-500/50"
+                      placeholder="Spotify Developer Client ID 입력"
+                      className="w-full rounded-xl bg-black/40 border border-zinc-800 px-3.5 py-3 text-xs text-zinc-300 placeholder-zinc-650 focus:outline-none focus:border-indigo-500/50"
                     />
                   </div>
 
                   {spotifyToken ? (
-                    <div className="bg-emerald-500/5 rounded-xl border border-emerald-500/10 p-3 mt-1 flex flex-col gap-2">
+                    <div className="bg-emerald-500/5 rounded-xl border border-emerald-500/10 p-3.5 mt-1 flex flex-col gap-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-zinc-400 font-medium">연동 상태</span>
+                        <span className="text-zinc-400 font-semibold">연동 상태</span>
                         <span className="text-emerald-400 flex items-center gap-1 font-bold">
                           <Check className="h-3 w-3" /> 연동 완료
                         </span>
                       </div>
                       <div className="text-xs flex items-center justify-between text-zinc-400">
                         <span>사용자</span>
-                        <span className="text-zinc-200 font-semibold">{spotifyUser || '알 수 없음'}</span>
+                        <span className="text-zinc-200 font-bold">{spotifyUser || '알 수 없음'}</span>
                       </div>
                       <button
                         onClick={() => setSpotifyToken(null, null, null)}
-                        className="w-full mt-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50 py-2 text-[10px] font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition"
+                        className="w-full mt-2 rounded-lg bg-zinc-850 border border-zinc-800 py-2.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition"
                       >
                         연동 해제
                       </button>
@@ -583,8 +617,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Gemini AI key config */}
-              <div className="glass-panel rounded-3xl p-5 shadow-lg border border-zinc-800/50">
+              {/* Gemini AI config panel */}
+              <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-3xl p-5 shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="h-5 w-5 text-indigo-400" />
                   <h3 className="text-sm font-bold text-zinc-200">Gemini AI 설정</h3>
@@ -592,7 +626,7 @@ export default function Home() {
 
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
                       Gemini API Key
                     </label>
                     <div className="flex gap-2">
@@ -601,14 +635,14 @@ export default function Home() {
                         value={tempGeminiKey}
                         onChange={(e) => setTempGeminiKey(e.target.value)}
                         placeholder="Google Gemini API Key 입력"
-                        className="flex-1 rounded-xl bg-black/40 border border-zinc-800 px-3.5 py-2.5 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-indigo-500/50"
+                        className="flex-1 rounded-xl bg-black/40 border border-zinc-800 px-3.5 py-3 text-xs text-zinc-300 placeholder-zinc-650 focus:outline-none focus:border-indigo-500/50"
                       />
                       <button
                         onClick={() => {
                           setGeminiKey(tempGeminiKey);
                           alert("Gemini API 키가 저장되었습니다.");
                         }}
-                        className="rounded-xl bg-indigo-600 px-4 text-xs font-semibold text-white hover:bg-indigo-700 transition"
+                        className="rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white hover:bg-indigo-700 transition"
                       >
                         저장
                       </button>
@@ -624,9 +658,9 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Persona Tuning */}
+                  {/* Persona settings */}
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-400 mb-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2.5">
                       AI 큐레이션 페르소나 설정
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -654,8 +688,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Data management options */}
-              <div className="glass-panel rounded-3xl p-5 shadow-lg border border-zinc-800/50">
+              {/* Data settings */}
+              <div className="bg-zinc-900/60 border border-zinc-800/60 rounded-3xl p-5 shadow-lg">
                 <h3 className="text-xs font-bold text-zinc-400 mb-3">데이터 관리</h3>
                 <div className="flex flex-col gap-2">
                   <button
@@ -688,7 +722,7 @@ export default function Home() {
             }`}
           >
             <Compass className="h-5 w-5" />
-            <span className="text-[9px] font-semibold tracking-wider">TODAY</span>
+            <span className="text-[9px] font-bold tracking-wider">TODAY</span>
           </button>
 
           <button
@@ -698,7 +732,7 @@ export default function Home() {
             }`}
           >
             <Archive className="h-5 w-5" />
-            <span className="text-[9px] font-semibold tracking-wider">HISTORY</span>
+            <span className="text-[9px] font-bold tracking-wider">HISTORY</span>
           </button>
 
           <button
@@ -708,7 +742,7 @@ export default function Home() {
             }`}
           >
             <SettingsIcon className="h-5 w-5" />
-            <span className="text-[9px] font-semibold tracking-wider">SETTINGS</span>
+            <span className="text-[9px] font-bold tracking-wider">SETTINGS</span>
           </button>
         </div>
       </nav>
@@ -765,7 +799,7 @@ export default function Home() {
                           onClick={() => setSelectedMovement(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition ${
                             selectedMovement === opt
-                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-semibold"
+                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-bold"
                               : "bg-black/20 border-zinc-800 text-zinc-400 hover:bg-black/40"
                           }`}
                         >
@@ -785,7 +819,7 @@ export default function Home() {
                           onClick={() => setSelectedActivity(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition ${
                             selectedActivity === opt
-                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-semibold"
+                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-bold"
                               : "bg-black/20 border-zinc-800 text-zinc-400 hover:bg-black/40"
                           }`}
                         >
@@ -805,7 +839,7 @@ export default function Home() {
                           onClick={() => setSelectedWeather(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition ${
                             selectedWeather === opt
-                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-semibold"
+                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-bold"
                               : "bg-black/20 border-zinc-800 text-zinc-400 hover:bg-black/40"
                           }`}
                         >
@@ -825,7 +859,7 @@ export default function Home() {
                           onClick={() => setSelectedMood(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition ${
                             selectedMood === opt
-                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-semibold"
+                              ? "bg-indigo-600/10 border-indigo-500/70 text-indigo-300 font-bold"
                               : "bg-black/20 border-zinc-800 text-zinc-400 hover:bg-black/40"
                           }`}
                         >
