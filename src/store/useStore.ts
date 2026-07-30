@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { MusicCard, AIPersona } from '../types';
+import { fetchCardsFromSupabase, insertCardToSupabase, deleteCardFromSupabase } from '../utils/supabase';
 
 interface StoreState {
   todayCards: MusicCard[];
@@ -12,7 +13,8 @@ interface StoreState {
   geminiKey: string;
   aiPersona: AIPersona;
   settingsPasscode: string | null;
-  syncCode: string;
+  supabaseUrl: string;
+  supabaseKey: string;
   isHydrated: boolean;
   isSyncing: boolean;
 
@@ -25,7 +27,7 @@ interface StoreState {
   setGeminiKey: (key: string) => void;
   setAiPersona: (persona: AIPersona) => void;
   setSettingsPasscode: (passcode: string | null) => void;
-  setSyncCode: (code: string) => void;
+  setSupabaseConfig: (url: string, key: string) => void;
   syncWithCloud: () => Promise<void>;
   clearHistory: () => void;
   
@@ -54,7 +56,8 @@ export const useStore = create<StoreState>((set, get) => ({
   geminiKey: '',
   aiPersona: 'emotional',
   settingsPasscode: null,
-  syncCode: 'global_main',
+  supabaseUrl: '',
+  supabaseKey: '',
   isHydrated: false,
   isSyncing: false,
 
@@ -66,8 +69,8 @@ export const useStore = create<StoreState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
     }
-    // Push update to global cloud sync API immediately
-    get().syncWithCloud();
+    // Insert into Supabase PostgreSQL DB if configured
+    insertCardToSupabase(card);
   },
 
   deleteCard: (id, isHistory) => {
@@ -84,8 +87,8 @@ export const useStore = create<StoreState>((set, get) => ({
         localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
       }
     }
-    // Push update to global cloud sync API immediately
-    get().syncWithCloud();
+    // Delete from Supabase PostgreSQL DB if configured
+    deleteCardFromSupabase(id);
   },
 
   setSpotifyClientId: (clientId) => {
@@ -107,7 +110,6 @@ export const useStore = create<StoreState>((set, get) => ({
       if (user) localStorage.setItem('momentune_spotify_user', user);
       else localStorage.removeItem('momentune_spotify_user');
     }
-    get().syncWithCloud();
   },
 
   setGeminiKey: (key) => {
@@ -132,11 +134,18 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  setSyncCode: (code) => {
-    const trimmed = code.trim() || 'global_main';
-    set({ syncCode: trimmed });
+  setSupabaseConfig: (url, key) => {
+    const trimmedUrl = url.trim();
+    const trimmedKey = key.trim();
+    set({ supabaseUrl: trimmedUrl, supabaseKey: trimmedKey });
     if (typeof window !== 'undefined') {
-      localStorage.setItem('momentune_sync_code', trimmed);
+      if (trimmedUrl && trimmedKey) {
+        localStorage.setItem('momentune_supabase_url', trimmedUrl);
+        localStorage.setItem('momentune_supabase_key', trimmedKey);
+      } else {
+        localStorage.removeItem('momentune_supabase_url');
+        localStorage.removeItem('momentune_supabase_key');
+      }
     }
     get().syncWithCloud();
   },
@@ -144,49 +153,29 @@ export const useStore = create<StoreState>((set, get) => ({
   syncWithCloud: async () => {
     set({ isSyncing: true });
     try {
-      // 1. Fetch current global cloud cards
-      const res = await fetch('/api/sync', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        const cloudToday: MusicCard[] = data.todayCards || [];
-        const cloudHistory: MusicCard[] = data.historyCards || [];
+      const supabaseCards = await fetchCardsFromSupabase();
+      if (supabaseCards && supabaseCards.length > 0) {
+        const todayKey = getLocalDateKey();
+        const todayCards: MusicCard[] = [];
+        const historyCards: MusicCard[] = [];
 
-        const localToday = get().todayCards;
-        const localHistory = get().historyCards;
-
-        // Merge & deduplicate by card ID
-        const todayMap = new Map<string, MusicCard>();
-        [...localToday, ...cloudToday].forEach((c) => {
-          if (c && c.id) todayMap.set(c.id, c);
+        supabaseCards.forEach((card: MusicCard) => {
+          if (card.dateKey === todayKey) {
+            todayCards.push(card);
+          } else {
+            historyCards.push(card);
+          }
         });
-        const mergedToday = Array.from(todayMap.values()).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
 
-        const historyMap = new Map<string, MusicCard>();
-        [...localHistory, ...cloudHistory].forEach((c) => {
-          if (c && c.id) historyMap.set(c.id, c);
-        });
-        const mergedHistory = Array.from(historyMap.values()).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-        set({ todayCards: mergedToday, historyCards: mergedHistory });
+        set({ todayCards, historyCards });
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem('momentune_today_cards', JSON.stringify(mergedToday));
-          localStorage.setItem('momentune_history_cards', JSON.stringify(mergedHistory));
+          localStorage.setItem('momentune_today_cards', JSON.stringify(todayCards));
+          localStorage.setItem('momentune_history_cards', JSON.stringify(historyCards));
         }
-
-        // 2. Push merged state back to global cloud DB
-        await fetch('/api/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ todayCards: mergedToday, historyCards: mergedHistory }),
-        });
       }
     } catch (err) {
-      console.warn("Cloud sync error:", err);
+      console.warn("Supabase sync warning:", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -197,7 +186,6 @@ export const useStore = create<StoreState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.removeItem('momentune_history_cards');
     }
-    get().syncWithCloud();
   },
 
   archiveOldCards: () => {
@@ -243,6 +231,8 @@ export const useStore = create<StoreState>((set, get) => ({
       const storedGeminiKey = localStorage.getItem('momentune_gemini_key');
       const storedPersona = localStorage.getItem('momentune_ai_persona');
       const storedPasscode = localStorage.getItem('momentune_passcode');
+      const storedSbUrl = localStorage.getItem('momentune_supabase_url');
+      const storedSbKey = localStorage.getItem('momentune_supabase_key');
 
       set({
         todayCards: storedToday ? JSON.parse(storedToday) : [],
@@ -254,14 +244,15 @@ export const useStore = create<StoreState>((set, get) => ({
         geminiKey: storedGeminiKey || '',
         aiPersona: (storedPersona as AIPersona) || 'emotional',
         settingsPasscode: storedPasscode || null,
-        syncCode: 'global_main',
+        supabaseUrl: storedSbUrl || '',
+        supabaseKey: storedSbKey || '',
         isHydrated: true,
       });
 
       // Run automatic date archiving
       get().archiveOldCards();
 
-      // Trigger global cloud sync immediately to pull all registered cards
+      // Trigger Supabase sync if configured
       get().syncWithCloud();
     } catch (e) {
       console.error("Hydration error:", e);

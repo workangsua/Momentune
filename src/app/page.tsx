@@ -22,8 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Volume2,
-  Cloud,
-  Share2
+  Database
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
@@ -67,7 +66,8 @@ export default function Home() {
     geminiKey,
     aiPersona,
     settingsPasscode,
-    syncCode,
+    supabaseUrl,
+    supabaseKey,
     isHydrated,
     isSyncing,
     setActiveTab,
@@ -78,7 +78,8 @@ export default function Home() {
     setGeminiKey,
     setAiPersona,
     setSettingsPasscode,
-    setSyncCode,
+    setSupabaseConfig,
+    syncWithCloud,
     clearHistory,
     hydrate
   } = useStore();
@@ -90,27 +91,6 @@ export default function Home() {
 
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
-
-  // Clean auto-sync without infinite React re-render loops
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    useStore.getState().syncWithCloud();
-
-    const interval = setInterval(() => {
-      useStore.getState().syncWithCloud();
-    }, 5000);
-
-    const handleFocus = () => {
-      useStore.getState().syncWithCloud();
-    };
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [isHydrated]);
 
   // Background pre-fetch real official album covers & preview URLs for cards stored in localStorage
   useEffect(() => {
@@ -283,24 +263,18 @@ export default function Home() {
   // Config Input fields
   const [tempClientId, setTempClientId] = useState("");
   const [tempGeminiKey, setTempGeminiKey] = useState("");
-  const [tempSyncCode, setTempSyncCode] = useState("");
+  const [tempSbUrl, setTempSbUrl] = useState("");
+  const [tempSbKey, setTempSbKey] = useState("");
 
   // Keep input fields synchronized with store state once hydrated
   useEffect(() => {
     if (isHydrated) {
       setTempClientId(spotifyClientId);
       setTempGeminiKey(geminiKey);
-      setTempSyncCode(syncCode);
+      setTempSbUrl(supabaseUrl);
+      setTempSbKey(supabaseKey);
     }
-  }, [isHydrated, spotifyClientId, geminiKey, syncCode]);
-
-  // Copy share URL handler
-  const handleCopyShareLink = () => {
-    if (typeof window === "undefined") return;
-    const shareUrl = `${window.location.origin}/`;
-    navigator.clipboard.writeText(shareUrl);
-    alert(`Momentune 웹 서비스 링크가 복사되었습니다!\n\n${shareUrl}\n\n사파리, 크롬, 모바일 어디서나 접속하면 생성한 모든 카드가 100% 자동 동기화됩니다.`);
-  };
+  }, [isHydrated, spotifyClientId, geminiKey, supabaseUrl, supabaseKey]);
 
   // Generate Music Card Handler
   const handleCreateCard = async () => {
@@ -355,7 +329,7 @@ export default function Home() {
         aiReason,
       };
 
-      // 4. Save to store (automatically pushes to global cloud DB!)
+      // 4. Save to store & Supabase
       addCard(newCard);
 
       // Close modal & reset selection
@@ -454,7 +428,7 @@ export default function Home() {
         <div className="absolute bottom-[-25%] right-[-25%] w-[80vw] h-[80vw] rounded-full bg-indigo-650/8 blur-[130px]" />
       </div>
 
-      {/* Header Logo */}
+      {/* Clean Header Logo (Chips completely removed) */}
       <header className="mb-8 flex flex-col items-center text-center px-4 z-10">
         <motion.div 
           initial={{ opacity: 0, y: -10 }} 
@@ -462,23 +436,6 @@ export default function Home() {
           className="flex flex-col items-center gap-1"
         >
           <h1 className="text-3xl font-black tracking-widest text-zinc-100 font-sans">MOMENTUNE</h1>
-          
-          {/* Cloud Sync Indicator Chip */}
-          <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-300 shadow-sm backdrop-blur-md">
-              <Cloud className={`h-3.5 w-3.5 ${isSyncing ? "text-blue-400 animate-spin" : "text-emerald-400"}`} />
-              <span>전 기기 실시간 클라우드 자동 저장 중</span>
-            </div>
-            
-            <button
-              onClick={handleCopyShareLink}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-[9px] font-bold text-blue-300 hover:bg-blue-600/30 transition shadow-sm"
-              title="링크 복사"
-            >
-              <Share2 className="h-2.5 w-2.5 text-blue-400" />
-              <span>링크 복사</span>
-            </button>
-          </div>
         </motion.div>
       </header>
 
@@ -956,37 +913,61 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* Cloud Sync Panel */}
+                  {/* Supabase Database config panel */}
                   <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Cloud className="h-5 w-5 text-blue-400" />
-                        <h3 className="text-sm font-bold text-zinc-200">기기 간 실시간 클라우드 자동 동기화</h3>
-                      </div>
-                      {isSyncing && (
-                        <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">
-                          <Loader2 className="h-3 w-3 animate-spin" /> 동기화 중...
-                        </span>
-                      )}
+                    <div className="flex items-center gap-2 mb-4">
+                      <Database className="h-5 w-5 text-emerald-400" />
+                      <h3 className="text-sm font-bold text-zinc-200">Supabase 데이터베이스 연동</h3>
                     </div>
 
-                    <p className="text-xs text-zinc-400 mb-3.5 leading-relaxed">
-                      사파리, 크롬, 모바일 어디서 접속하든 주소창의 기본 링크(<code className="text-blue-300 font-mono">https://momentune-ai.vercel.app/</code>)로 접속 시 생성한 카드가 100% 자동 동기화되어 표시됩니다.
-                    </p>
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                          Supabase Project URL
+                        </label>
+                        <input
+                          type="text"
+                          value={tempSbUrl}
+                          onChange={(e) => setTempSbUrl(e.target.value)}
+                          placeholder="https://your-project.supabase.co"
+                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white placeholder-zinc-550 focus:outline-none focus:border-blue-500/50"
+                        />
+                      </div>
 
-                    <div className="mt-3 flex justify-between items-center text-[10px] border-t border-white/10 pt-2.5">
-                      <span className="text-zinc-400 font-medium">
-                        상태: <code className="text-emerald-400 font-bold font-mono bg-black/40 px-1.5 py-0.5 rounded">글로벌 서버 실시간 공유 중</code>
-                      </span>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
+                          Supabase Anon Key
+                        </label>
+                        <input
+                          type="password"
+                          value={tempSbKey}
+                          onChange={(e) => setTempSbKey(e.target.value)}
+                          placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white placeholder-zinc-550 focus:outline-none focus:border-blue-500/50"
+                        />
+                      </div>
+
                       <button
                         onClick={() => {
-                          useStore.getState().syncWithCloud();
-                          alert("글로벌 서버에서 최신 데이터베이스를 동기화했습니다!");
+                          setSupabaseConfig(tempSbUrl, tempSbKey);
+                          alert("Supabase 연동 정보가 저장되었습니다.");
                         }}
-                        className="text-blue-400 font-bold underline hover:text-blue-300"
+                        className="mt-1 w-full rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm"
                       >
-                        지금 즉시 동기화 (Sync Now)
+                        Supabase 연동 정보 저장
                       </button>
+
+                      <div className="mt-2 text-[10px] text-zinc-450 bg-black/30 rounded-xl p-3 border border-white/5 leading-relaxed font-mono">
+                        <span className="text-zinc-300 font-bold block mb-1 font-sans">※ Supabase 테이블 생성 SQL 스니펫:</span>
+                        create table music_cards (<br />
+                        &nbsp;&nbsp;id uuid primary key,<br />
+                        &nbsp;&nbsp;created_at timestamptz default now(),<br />
+                        &nbsp;&nbsp;date_key text,<br />
+                        &nbsp;&nbsp;context jsonb,<br />
+                        &nbsp;&nbsp;track jsonb,<br />
+                        &nbsp;&nbsp;ai_reason text<br />
+                        );
+                      </div>
                     </div>
                   </div>
 
