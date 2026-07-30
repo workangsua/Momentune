@@ -261,10 +261,10 @@ export default function Home() {
 
   if (!isHydrated) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#020408] text-zinc-500">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#020408] text-zinc-550">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <p className="text-sm font-semibold tracking-wide text-zinc-550">모멘튠 조율 중...</p>
+          <p className="text-sm font-semibold tracking-wide">모멘튠 조율 중...</p>
         </div>
       </div>
     );
@@ -381,53 +381,55 @@ export default function Home() {
                             }}
                             className="absolute w-full max-w-[310px] overflow-visible"
                           >
-                            {/* Glassmorphism Color Backdrop Object (Layered underneath to blur-through the card) */}
-                            <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 w-44 h-24 rounded-full bg-blue-500/80 blur-[28px] pointer-events-none -z-10" />
-
-                            {/* Premium Ticket Card Body (Frosted glass) */}
-                            <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-xl z-10">
+                            {/* Visual Card Body matching User's Mockup */}
+                            <div className="bg-[#121620]/90 border border-white/10 rounded-[32px] flex flex-col relative overflow-hidden shadow-[0_0_25px_rgba(0,140,255,0.25)] backdrop-blur-xl z-10">
                               
-                              {/* Large Album Cover Image */}
-                              <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
-                                <img
-                                  src={card.track.albumCover}
-                                  alt="Album Cover"
-                                  className="h-full w-full object-cover"
-                                />
-                                
-                                {/* Situation chips overlay on top-left */}
-                                <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                                  {Object.values(card.context).map((tag, tIdx) => tag && (
-                                    <span
-                                      key={tIdx}
-                                      className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-zinc-350 font-bold"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                </div>
+                              {/* Top Half: Dark Container with Rounded Album Cover Image */}
+                              <div className="p-4 flex flex-col bg-transparent">
+                                <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
+                                  <img
+                                    src={card.track.albumCover}
+                                    alt="Album Cover"
+                                    className="h-full w-full object-cover"
+                                  />
+                                  
+                                  {/* Situation chips overlay on top-left */}
+                                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                                    {Object.values(card.context).map((tag, tIdx) => tag && (
+                                      <span
+                                        key={tIdx}
+                                        className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-zinc-350 font-bold"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
 
-                                {/* Stamp overlay on bottom-right */}
-                                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
-                                  <span className="text-[9px] text-zinc-300 font-bold font-mono">
-                                    {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
+                                  {/* Stamp overlay on bottom-right */}
+                                  <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
+                                    <span className="text-[9px] text-zinc-300 font-bold font-mono">
+                                      {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
 
-                              {/* Title & Artist with size hierarchy and left alignment */}
-                              <div className="mt-5 px-1">
-                                <div className="flex justify-between items-start gap-4">
-                                  <div className="min-w-0 flex-1 text-left">
-                                    <h4 className="text-xl font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                    <p className="text-xs text-blue-400 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
+                              {/* Bottom Half: Solid Sky/Royal Blue Block housing Metadata & AI Reason */}
+                              <div className="bg-gradient-to-b from-[#0091ff] to-[#0055ff] p-5 pb-6 flex flex-col flex-grow text-left rounded-b-[30px] border-t border-white/10 relative overflow-hidden">
+                                {/* Subtle inner glow for depth */}
+                                <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-white/15 blur-xl pointer-events-none" />
+                                
+                                <div className="flex justify-between items-start gap-4 z-10">
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="text-xl font-extrabold text-white truncate tracking-tight">{card.track.title}</h4>
+                                    <p className="text-xs text-blue-100 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
                                   </div>
                                   <button
                                     onClick={() => {
                                       deleteCard(card.id, false);
                                       if (activeIndex > 0) setActiveIndex(activeIndex - 1);
                                     }}
-                                    className="text-zinc-550 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/5"
+                                    className="text-white/70 hover:text-white transition p-1.5 rounded-full hover:bg-white/10"
                                     title="카드 삭제"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -435,26 +437,23 @@ export default function Home() {
                                 </div>
 
                                 {/* AI Curated Reason - Stripped of quotes */}
-                                <div className="mt-4 pt-3.5 border-t border-white/5">
-                                  <p className="text-xs text-zinc-300 leading-relaxed font-semibold">
+                                <div className="mt-4 pt-3.5 border-t border-white/20 z-10">
+                                  <p className="text-xs text-white/95 leading-relaxed font-semibold">
                                     {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
                                   </p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Protruding Ticket Stub (Frosted Glass overlaying the colorful blue circle backdrop) */}
+                            {/* Protruding Spotify Pill Button (Snug, centered, blue matching mockup) */}
                             <a
                               href={card.track.spotifyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="relative z-10 -mt-4 mx-6 h-12 rounded-b-2xl bg-white/10 backdrop-blur-xl border-x border-b border-white/10 border-t border-dashed border-white/20 flex items-center justify-center shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                              className="relative z-10 -mt-2 mx-8 h-10 rounded-b-2xl bg-[#0055ff] hover:bg-[#0044dd] flex items-center justify-center shadow-lg transition duration-200 border-t border-white/10 cursor-pointer"
                             >
-                              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/10"></div>
-                              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/10"></div>
-
-                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest z-20">
-                                <Music className="h-3.5 w-3.5 text-blue-400 animate-bounce" />
+                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
+                                <Music className="h-3.5 w-3.5 animate-pulse" />
                                 <span>SPOTIFY PLAY</span>
                                 <ExternalLink className="h-3 w-3 opacity-80" />
                               </div>
@@ -572,79 +571,81 @@ export default function Home() {
                         <div className="flex flex-col gap-8">
                           {cards.map((card) => (
                             <div key={card.id} className="relative group overflow-visible">
-                              {/* Glassmorphism Color Backdrop Object */}
-                              <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 w-44 h-24 rounded-full bg-blue-500/80 blur-[28px] pointer-events-none -z-10" />
-
-                              <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-xl z-10">
+                              
+                              {/* Visual Card Body */}
+                              <div className="bg-[#121620]/90 border border-white/10 rounded-[32px] flex flex-col relative overflow-hidden shadow-[0_0_25px_rgba(0,140,255,0.25)] backdrop-blur-xl z-10">
                                 
-                                {/* Large Album Cover Image */}
-                                <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
-                                  <img
-                                    src={card.track.albumCover}
-                                    alt="Album Cover"
-                                    className="h-full w-full object-cover"
-                                  />
-                                  
-                                  {/* Situation chips */}
-                                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                                    {Object.values(card.context).map((tag, tIdx) => tag && (
-                                      <span
-                                        key={tIdx}
-                                        className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
-                                  </div>
+                                {/* Top Half: Album Cover */}
+                                <div className="p-4 flex flex-col bg-transparent">
+                                  <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
+                                    <img
+                                      src={card.track.albumCover}
+                                      alt="Album Cover"
+                                      className="h-full w-full object-cover"
+                                    />
+                                    
+                                    {/* chips */}
+                                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                                      {Object.values(card.context).map((tag, tIdx) => tag && (
+                                        <span
+                                          key={tIdx}
+                                          className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
+                                        >
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
 
-                                  {/* Stamp */}
-                                  <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
-                                    <span className="text-[9px] text-zinc-300 font-bold font-mono">
-                                      {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
+                                    {/* stamp */}
+                                    <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
+                                      <span className="text-[9px] text-zinc-300 font-bold font-mono">
+                                        {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
 
-                                {/* Title & Artist */}
-                                <div className="mt-5 px-1">
-                                  <div className="flex justify-between items-start gap-4">
-                                    <div className="min-w-0 flex-1 text-left">
-                                      <h4 className="text-xl font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                      <p className="text-xs text-blue-400 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
+                                {/* Bottom Half: Blue Container */}
+                                <div className="bg-gradient-to-b from-[#0091ff] to-[#0055ff] p-5 pb-6 flex flex-col flex-grow text-left rounded-b-[30px] border-t border-white/10 relative overflow-hidden">
+                                  <div className="absolute -top-12 -left-12 w-32 h-32 rounded-full bg-white/15 blur-xl pointer-events-none" />
+
+                                  <div className="flex justify-between items-start gap-4 z-10">
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-xl font-extrabold text-white truncate tracking-tight">{card.track.title}</h4>
+                                      <p className="text-xs text-blue-100 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
                                     </div>
                                     <button
                                       onClick={() => deleteCard(card.id, true)}
-                                      className="text-zinc-550 hover:text-red-400 transition p-1 rounded-full hover:bg-white/5"
+                                      className="text-white/70 hover:text-white transition p-1.5 rounded-full hover:bg-white/10"
                                       title="카드 삭제"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </button>
                                   </div>
 
-                                  {/* AI Curated Reason - Stripped of quotes */}
-                                  <div className="mt-4 pt-3.5 border-t border-white/5">
-                                    <p className="text-xs text-zinc-300 leading-relaxed font-semibold">
+                                  {/* AI Curated Reason */}
+                                  <div className="mt-4 pt-3.5 border-t border-white/20 z-10">
+                                    <p className="text-xs text-white/95 leading-relaxed font-semibold">
                                       {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
                                     </p>
                                   </div>
                                 </div>
                               </div>
 
+                              {/* Protruding Spotify Pill */}
                               <a
                                 href={card.track.spotifyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="relative z-10 -mt-4 mx-6 h-12 rounded-b-2xl bg-white/10 backdrop-blur-xl border-x border-b border-white/10 border-t border-dashed border-white/20 flex items-center justify-center shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                                className="relative z-10 -mt-2 mx-8 h-10 rounded-b-2xl bg-[#0055ff] hover:bg-[#0044dd] flex items-center justify-center shadow-lg transition duration-200 border-t border-white/10 cursor-pointer"
                               >
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/10"></div>
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/10"></div>
-
-                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest z-20">
-                                  <Music className="h-3.5 w-3.5 text-blue-400 animate-bounce" />
+                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
+                                  <Music className="h-3.5 w-3.5 animate-pulse" />
                                   <span>SPOTIFY PLAY</span>
                                   <ExternalLink className="h-3 w-3 opacity-80" />
                                 </div>
                               </a>
+
                             </div>
                           ))}
                         </div>
@@ -673,7 +674,7 @@ export default function Home() {
                     <Lock className="h-6 w-6" />
                   </div>
                   <h3 className="text-base font-bold text-zinc-200">개인정보 설정 잠금 비밀번호 등록</h3>
-                  <p className="text-xs text-zinc-455 mt-2 leading-relaxed px-4">
+                  <p className="text-xs text-zinc-450 mt-2 leading-relaxed px-4">
                     설정에 들어갈 수 있는 비밀번호를 생성해 주세요.<br />
                     등록한 스포티파이 ID와 Gemini API Key 정보를 보호합니다.
                   </p>
@@ -785,7 +786,7 @@ export default function Home() {
                               redirectToSpotifyAuth(tempClientId);
                             }}
                             disabled={!tempClientId}
-                            className="w-full rounded-xl bg-emerald-500 py-3 text-xs font-bold text-white shadow-sm shadow-emerald-500/10 hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-xl bg-emerald-500 py-3 text-xs font-bold text-white shadow-sm shadow-emerald-500/10 hover:bg-emerald-650 transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Spotify 로그인 연동
                           </button>
