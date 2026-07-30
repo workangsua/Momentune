@@ -18,7 +18,9 @@ import {
   AlertCircle,
   RotateCcw,
   Lock,
-  Unlock
+  Unlock,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens } from "../utils/spotify";
@@ -85,6 +87,14 @@ export default function Home() {
   const [isSettingsUnlocked, setIsSettingsUnlocked] = useState(false);
   const [inputPasscode, setInputPasscode] = useState("");
   const [newPasscode, setNewPasscode] = useState("");
+
+  // Active Index for Today Cards Carousel
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  // Set activeIndex to 0 when a new card is added
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [todayCards.length]);
 
   // Context Selector Modal State
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -254,7 +264,7 @@ export default function Home() {
       <div className="flex h-screen w-screen items-center justify-center bg-[#020408] text-zinc-500">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-          <p className="text-sm font-semibold tracking-wide text-zinc-500">모멘튠 조율 중...</p>
+          <p className="text-sm font-semibold tracking-wide text-zinc-550">모멘튠 조율 중...</p>
         </div>
       </div>
     );
@@ -315,13 +325,13 @@ export default function Home() {
                   </button>
                 </div>
               ) : (
-                // Timeline of today's cards
-                <div className="flex flex-col gap-6">
+                // 3D Carousel Coverflow of today's cards
+                <div className="flex flex-col gap-4 flex-1 justify-center py-2">
                   {/* Summary Bar */}
                   <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
                       <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-500 mt-0.5 font-medium">자정이 지나면 자동으로 HISTORY 보관소로 이동합니다.</p>
+                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">옆으로 밀거나 아래 버튼으로 넘겨 보세요.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
@@ -331,105 +341,175 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* Cards list */}
-                  <div className="flex flex-col gap-10">
-                    {todayCards.map((card) => (
-                      <motion.div
-                        key={card.id}
-                        initial={{ opacity: 0, y: 15 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="relative group"
-                      >
-                        {/* Premium Ticket Card Body (Frosted Dark Glassmorphism) */}
-                        <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
-                          
-                          {/* Inner visual block (Soft Blue-Tinted Glass) */}
-                          <div className="aspect-square w-full rounded-2xl bg-blue-500/5 p-5 flex flex-col justify-between relative border border-white/5 overflow-hidden">
-                            {/* Top part of visual block: context chips */}
-                            <div className="flex flex-wrap gap-1">
-                              {Object.values(card.context).map((tag, tIdx) => tag && (
-                                <span
-                                  key={tIdx}
-                                  className="inline-block rounded-full bg-white/10 border border-white/5 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
+                  {/* 3D Swipe Stack Container */}
+                  <div className="relative h-[490px] w-full flex items-center justify-center overflow-hidden mt-4">
+                    <AnimatePresence initial={false}>
+                      {todayCards.map((card, idx) => {
+                        const offset = idx - activeIndex;
+                        const isActive = offset === 0;
+                        const isVisible = Math.abs(offset) <= 1;
 
-                            {/* Center of canvas: Album cover art with turntable detail */}
-                            <div className="relative flex flex-col items-center justify-center my-auto">
-                              <div className="relative h-28 w-28 flex-shrink-0 shadow-xl rounded-full overflow-hidden record-spin border border-white/10">
-                                <img
-                                  src={card.track.albumCover}
-                                  alt="Cover"
-                                  className="h-full w-full object-cover"
-                                />
-                                {/* Vinyl center cutout */}
-                                <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
-                                  <div className="h-6 w-6 rounded-full bg-[#1c1c1c] border-2 border-white/10 flex items-center justify-center">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+                        if (!isVisible) return null;
+
+                        return (
+                          <motion.div
+                            key={card.id}
+                            style={{
+                              pointerEvents: isActive ? "auto" : "none"
+                            }}
+                            animate={{
+                              x: offset * 115, // horizontal spacing offset
+                              scale: isActive ? 1 : 0.86,
+                              rotate: offset * 3, // slightly tilt neighboring cards
+                              zIndex: 10 - Math.abs(offset),
+                              opacity: isActive ? 1 : 0.45,
+                            }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 350,
+                              damping: 28
+                            }}
+                            drag={isActive ? "x" : false}
+                            dragConstraints={{ left: 0, right: 0 }}
+                            onDragEnd={(e, info) => {
+                              const swipeThreshold = 50;
+                              if (info.offset.x < -swipeThreshold && activeIndex < todayCards.length - 1) {
+                                setActiveIndex(activeIndex + 1);
+                              } else if (info.offset.x > swipeThreshold && activeIndex > 0) {
+                                setActiveIndex(activeIndex - 1);
+                              }
+                            }}
+                            className="absolute w-full max-w-[310px]"
+                          >
+                            {/* Premium Ticket Card Body */}
+                            <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                              
+                              {/* Inner visual block */}
+                              <div className="aspect-square w-full rounded-2xl bg-blue-500/5 p-5 flex flex-col justify-between relative border border-white/5 overflow-hidden">
+                                <div className="flex flex-wrap gap-1">
+                                  {Object.values(card.context).map((tag, tIdx) => tag && (
+                                    <span
+                                      key={tIdx}
+                                      className="inline-block rounded-full bg-white/10 border border-white/5 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+
+                                <div className="relative flex flex-col items-center justify-center my-auto">
+                                  <div className="relative h-28 w-28 flex-shrink-0 shadow-xl rounded-full overflow-hidden record-spin border border-white/10">
+                                    <img
+                                      src={card.track.albumCover}
+                                      alt="Cover"
+                                      className="h-full w-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
+                                      <div className="h-6 w-6 rounded-full bg-[#1c1c1c] border-2 border-white/10 flex items-center justify-center">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+                                      </div>
+                                    </div>
                                   </div>
+                                </div>
+
+                                <div className="flex justify-between items-end border-t border-white/10 pt-2.5 mt-2">
+                                  <span className="text-[9px] text-zinc-400 font-bold font-mono uppercase tracking-wider">
+                                    MOMENTUNE STAMP
+                                  </span>
+                                  <span className="text-[9px] text-zinc-400 font-bold font-mono">
+                                    {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Metadata section */}
+                              <div className="mt-5 px-1">
+                                <div className="flex justify-between items-start gap-4">
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
+                                    <p className="text-xs text-zinc-400 truncate mt-0.5 font-semibold">{card.track.artist}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      deleteCard(card.id, false);
+                                      if (activeIndex > 0) setActiveIndex(activeIndex - 1);
+                                    }}
+                                    className="text-zinc-500 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/5"
+                                    title="카드 삭제"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+
+                                <div className="mt-4 pt-3.5 border-t border-white/5">
+                                  <p className="text-xs text-zinc-300 leading-relaxed font-semibold italic whitespace-pre-line">
+                                    "{card.aiReason}"
+                                  </p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Bottom part: meta indicators */}
-                            <div className="flex justify-between items-end border-t border-white/10 pt-2.5 mt-2">
-                              <span className="text-[9px] text-zinc-400 font-bold font-mono uppercase tracking-wider">
-                                MOMENTUNE STAMP
-                              </span>
-                              <span className="text-[9px] text-zinc-400 font-bold font-mono">
-                                {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                          </div>
+                            {/* Protruding Ticket Stub */}
+                            <a
+                              href={card.track.spotifyUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                            >
+                              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/5"></div>
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/5"></div>
 
-                          {/* Metadata row (Title, Artist, Delete) */}
-                          <div className="mt-5 px-1">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="min-w-0 flex-1">
-                                <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                <p className="text-xs text-zinc-400 truncate mt-0.5 font-semibold">{card.track.artist}</p>
+                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
+                                <Music className="h-3.5 w-3.5 animate-bounce" />
+                                <span>SPOTIFY PLAY</span>
+                                <ExternalLink className="h-3 w-3 opacity-80" />
                               </div>
-                              <button
-                                onClick={() => deleteCard(card.id, false)}
-                                className="text-zinc-500 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/5"
-                                title="카드 삭제"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-
-                            {/* AI Curated Reason */}
-                            <div className="mt-4 pt-3.5 border-t border-white/5">
-                              <p className="text-xs text-zinc-300 leading-relaxed font-semibold italic whitespace-pre-line">
-                                "{card.aiReason}"
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Protruding Ticket Stub (Spotify button with notches) */}
-                        <a
-                          href={card.track.spotifyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
-                        >
-                          {/* Cutout punch notches matching the dark slate background */}
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/5"></div>
-                          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/5"></div>
-
-                          <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
-                            <Music className="h-3.5 w-3.5 animate-bounce" />
-                            <span>SPOTIFY PLAY</span>
-                            <ExternalLink className="h-3 w-3 opacity-80" />
-                          </div>
-                        </a>
-                      </motion.div>
-                    ))}
+                            </a>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
                   </div>
+
+                  {/* Navigation Helper Buttons and Indicators */}
+                  {todayCards.length > 1 && (
+                    <div className="flex flex-col items-center gap-3 mt-2">
+                      <div className="flex items-center gap-8">
+                        <button
+                          onClick={() => activeIndex > 0 && setActiveIndex(activeIndex - 1)}
+                          disabled={activeIndex === 0}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-350 hover:text-white disabled:opacity-30 transition"
+                        >
+                          <ChevronLeft className="h-4.5 w-4.5" />
+                        </button>
+                        
+                        <span className="text-xs font-bold font-mono text-zinc-400 tracking-wider">
+                          {activeIndex + 1} <span className="text-zinc-650">/</span> {todayCards.length}
+                        </span>
+
+                        <button
+                          onClick={() => activeIndex < todayCards.length - 1 && setActiveIndex(activeIndex + 1)}
+                          disabled={activeIndex === todayCards.length - 1}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-350 hover:text-white disabled:opacity-30 transition"
+                        >
+                          <ChevronRight className="h-4.5 w-4.5" />
+                        </button>
+                      </div>
+
+                      {/* Swipe Dots */}
+                      <div className="flex justify-center gap-1.5">
+                        {todayCards.map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setActiveIndex(idx)}
+                            className={`h-1.5 rounded-full transition-all duration-350 ${
+                              activeIndex === idx ? "w-6 bg-blue-500" : "w-1.5 bg-zinc-700/60"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -448,7 +528,7 @@ export default function Home() {
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-24 px-4">
                   <Archive className="h-10 w-10 text-zinc-550 mb-4" />
                   <h2 className="text-base font-bold text-zinc-300">보관된 티켓이 없습니다</h2>
-                  <p className="text-xs text-zinc-550 mt-1 max-w-xs leading-relaxed font-medium">
+                  <p className="text-xs text-zinc-555 mt-1 max-w-xs leading-relaxed font-medium">
                     오늘이 지나 자정이 지나면,<br />
                     작성된 티켓들이 자동으로 보관함에 보관됩니다.
                   </p>
@@ -546,7 +626,7 @@ export default function Home() {
                                     </div>
                                     <button
                                       onClick={() => deleteCard(card.id, true)}
-                                      className="text-zinc-500 hover:text-red-400 transition p-1 rounded-full hover:bg-white/5"
+                                      className="text-zinc-550 hover:text-red-400 transition p-1 rounded-full hover:bg-white/5"
                                       title="카드 삭제"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -554,7 +634,7 @@ export default function Home() {
                                   </div>
 
                                   <div className="mt-4 pt-3.5 border-t border-white/5">
-                                    <p className="text-xs text-zinc-300 leading-relaxed font-semibold italic whitespace-pre-line">
+                                    <p className="text-xs text-zinc-350 leading-relaxed font-semibold italic whitespace-pre-line">
                                       "{card.aiReason}"
                                     </p>
                                   </div>
@@ -692,12 +772,12 @@ export default function Home() {
                       {spotifyToken ? (
                         <div className="bg-emerald-500/5 rounded-xl border border-emerald-500/10 p-3.5 mt-1 flex flex-col gap-2">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-zinc-450 font-semibold">연동 상태</span>
+                            <span className="text-zinc-455 font-semibold">연동 상태</span>
                             <span className="text-emerald-400 flex items-center gap-1 font-bold">
                               <Check className="h-3 w-3" /> 연동 완료
                             </span>
                           </div>
-                          <div className="text-xs flex items-center justify-between text-zinc-450">
+                          <div className="text-xs flex items-center justify-between text-zinc-455">
                             <span>사용자</span>
                             <span className="text-zinc-200 font-bold">{spotifyUser || '알 수 없음'}</span>
                           </div>
@@ -786,7 +866,7 @@ export default function Home() {
                               onClick={() => setAiPersona(item.key as AIPersona)}
                               className={`rounded-xl border p-3 text-left transition ${
                                 aiPersona === item.key
-                                  ? "bg-blue-505/10 border-blue-500/50 text-blue-300"
+                                  ? "bg-blue-500/10 border-blue-500/50 text-blue-300"
                                   : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
                               }`}
                             >
@@ -997,7 +1077,7 @@ export default function Home() {
                   <button
                     onClick={handleCreateCard}
                     disabled={!selectedMovement || !selectedActivity || !selectedWeather || !selectedMood}
-                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-750 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
+                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
                   >
                     AI 큐레이션 카드 추천받기
                   </button>
