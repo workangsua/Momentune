@@ -1,5 +1,6 @@
 // Synchronous high-fidelity song highlight preview player for Momentune
 let globalAudio: HTMLAudioElement | null = null;
+let currentPlaySessionId = 0; // Increment on every stop/change to invalidate pending async fetches!
 
 // Search iTunes API for the exact 30-second song climax preview URL
 export const fetchSongPreviewUrl = async (artist: string, title: string): Promise<string | undefined> => {
@@ -18,17 +19,29 @@ export const fetchSongPreviewUrl = async (artist: string, title: string): Promis
   return undefined;
 };
 
+export const getCurrentPlaySessionId = (): number => currentPlaySessionId;
+
 // Play exact song climax audio preview 100% synchronously to prevent browser Autoplay blocks
 export const playCardSongHighlight = (
   previewUrl: string | undefined,
-  onEnd?: () => void
+  onEnd?: () => void,
+  targetSessionId?: number
 ) => {
+  // If targetSessionId was provided and does not match current session, abort playback!
+  if (targetSessionId !== undefined && targetSessionId !== currentPlaySessionId) {
+    return;
+  }
+
+  // Stop any currently playing audio and invalidate previous sessions
   stopAudioPreview();
 
   if (!previewUrl) {
     console.warn("No preview URL provided for playback");
     return;
   }
+
+  // Record active session ID for this playback
+  const session = ++currentPlaySessionId;
 
   try {
     globalAudio = new Audio(previewUrl);
@@ -42,7 +55,7 @@ export const playCardSongHighlight = (
     }
 
     globalAudio.onended = () => {
-      if (onEnd) onEnd();
+      if (onEnd && session === currentPlaySessionId) onEnd();
     };
   } catch (err) {
     console.warn("Audio creation error:", err);
@@ -50,9 +63,14 @@ export const playCardSongHighlight = (
 };
 
 export const stopAudioPreview = () => {
+  currentPlaySessionId++; // Invalidate any pending async preview requests!
   if (globalAudio) {
-    globalAudio.pause();
-    globalAudio.currentTime = 0;
+    try {
+      globalAudio.pause();
+      globalAudio.currentTime = 0;
+    } catch (e) {
+      // Ignore pause error if audio is unloading
+    }
     globalAudio = null;
   }
 };

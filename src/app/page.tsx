@@ -28,7 +28,7 @@ import {
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
 import { generateAIReason } from "../utils/gemini";
-import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl } from "../utils/audio";
+import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl, getCurrentPlaySessionId } from "../utils/audio";
 import { testSupabaseConnection } from "../utils/supabase";
 import { MusicCard, AIPersona } from "../types";
 
@@ -123,13 +123,16 @@ export default function Home() {
       return;
     }
 
+    const session = getCurrentPlaySessionId();
+
     if (!card.track.previewUrl) {
       // Async fallback fetch if not yet loaded
       fetchSongPreviewUrl(card.track.artist, card.track.title).then((url) => {
-        if (url) {
+        // If tab was switched or mouse moved away while fetching, abort playback!
+        if (url && session === getCurrentPlaySessionId()) {
           card.track.previewUrl = url;
           setPlayingCardId(card.id);
-          playCardSongHighlight(url, () => setPlayingCardId(null));
+          playCardSongHighlight(url, () => setPlayingCardId(null), session);
         }
       });
       return;
@@ -138,7 +141,7 @@ export default function Home() {
     setPlayingCardId(card.id);
     playCardSongHighlight(card.track.previewUrl, () => {
       setPlayingCardId(null);
-    });
+    }, session);
   };
 
   const handleStopPreview = () => {
@@ -146,12 +149,10 @@ export default function Home() {
     setPlayingCardId(null);
   };
 
-  // Cleanup audio on tab switch or unmount
+  // Immediate cleanup of audio preview on tab switch or component unmount
   useEffect(() => {
-    return () => {
-      stopAudioPreview();
-      setPlayingCardId(null);
-    };
+    stopAudioPreview();
+    setPlayingCardId(null);
   }, [activeTab]);
 
   // Handle Spotify Redirect Callback
@@ -513,7 +514,10 @@ export default function Home() {
                     {/* Left Navigation Chevron Button (Floating on Left Side of Active Card) */}
                     {carouselCards.length > 1 && (
                       <button
-                        onClick={() => activeIndex > 0 && setActiveIndex(activeIndex - 1)}
+                        onClick={() => {
+                          stopAudioPreview();
+                          if (activeIndex > 0) setActiveIndex(activeIndex - 1);
+                        }}
                         disabled={activeIndex === 0}
                         className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 border border-white/20 text-white shadow-2xl backdrop-blur-xl hover:bg-blue-600 hover:border-blue-400 hover:scale-110 disabled:opacity-20 disabled:scale-100 transition-all duration-300"
                         title="이전 카드"
@@ -525,7 +529,10 @@ export default function Home() {
                     {/* Right Navigation Chevron Button (Floating on Right Side of Active Card) */}
                     {carouselCards.length > 1 && (
                       <button
-                        onClick={() => activeIndex < carouselCards.length - 1 && setActiveIndex(activeIndex + 1)}
+                        onClick={() => {
+                          stopAudioPreview();
+                          if (activeIndex < carouselCards.length - 1) setActiveIndex(activeIndex + 1);
+                        }}
                         disabled={activeIndex === carouselCards.length - 1}
                         className="absolute right-[-16px] top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 border border-white/20 text-white shadow-2xl backdrop-blur-xl hover:bg-blue-600 hover:border-blue-400 hover:scale-110 disabled:opacity-20 disabled:scale-100 transition-all duration-300"
                         title="다음 카드"
@@ -565,8 +572,10 @@ export default function Home() {
                             onDragEnd={(e, info) => {
                               const swipeThreshold = 50;
                               if (info.offset.x < -swipeThreshold && activeIndex < carouselCards.length - 1) {
+                                stopAudioPreview();
                                 setActiveIndex(activeIndex + 1);
                               } else if (info.offset.x > swipeThreshold && activeIndex > 0) {
+                                stopAudioPreview();
                                 setActiveIndex(activeIndex - 1);
                               }
                             }}
@@ -576,6 +585,7 @@ export default function Home() {
                               if (isActive) {
                                 handlePlayPreview(card);
                               } else {
+                                stopAudioPreview();
                                 setActiveIndex(idx);
                               }
                             }}
@@ -647,6 +657,7 @@ export default function Home() {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      stopAudioPreview();
                                       deleteCard(card.id, false);
                                       if (activeIndex > 0) setActiveIndex(activeIndex - 1);
                                     }}
@@ -683,7 +694,10 @@ export default function Home() {
                         {carouselCards.map((_, idx) => (
                           <button
                             key={idx}
-                            onClick={() => setActiveIndex(idx)}
+                            onClick={() => {
+                              stopAudioPreview();
+                              setActiveIndex(idx);
+                            }}
                             className={`h-1.5 rounded-full transition-all duration-350 ${
                               activeIndex === idx ? "w-6 bg-blue-500 shadow-sm shadow-blue-500/50" : "w-1.5 bg-zinc-700/60 hover:bg-zinc-500"
                             }`}
@@ -831,6 +845,7 @@ export default function Home() {
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        stopAudioPreview();
                                         deleteCard(card.id, true);
                                       }}
                                       className="text-zinc-400 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/10"
@@ -1204,7 +1219,10 @@ alter table music_cards disable row level security;`}
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-40">
         <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-5 py-3.5 flex justify-around items-center shadow-2xl">
           <button
-            onClick={() => setActiveTab("today")}
+            onClick={() => {
+              stopAudioPreview();
+              setActiveTab("today");
+            }}
             className={`flex flex-col items-center gap-1 transition ${
               activeTab === "today" ? "text-blue-400" : "text-zinc-400 hover:text-white"
             }`}
@@ -1214,7 +1232,10 @@ alter table music_cards disable row level security;`}
           </button>
 
           <button
-            onClick={() => setActiveTab("history")}
+            onClick={() => {
+              stopAudioPreview();
+              setActiveTab("history");
+            }}
             className={`flex flex-col items-center gap-1 transition ${
               activeTab === "history" ? "text-blue-400" : "text-zinc-400 hover:text-white"
             }`}
@@ -1224,7 +1245,10 @@ alter table music_cards disable row level security;`}
           </button>
 
           <button
-            onClick={() => setActiveTab("settings")}
+            onClick={() => {
+              stopAudioPreview();
+              setActiveTab("settings");
+            }}
             className={`flex flex-col items-center gap-1 transition ${
               activeTab === "settings" ? "text-blue-400" : "text-zinc-400 hover:text-white"
             }`}
