@@ -79,7 +79,6 @@ export default function Home() {
     setAiPersona,
     setSettingsPasscode,
     setSyncCode,
-    syncWithCloud,
     clearHistory,
     hydrate
   } = useStore();
@@ -92,18 +91,18 @@ export default function Home() {
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
 
-  // Auto sync cards from global cloud DB periodically (every 3s) & on window focus
+  // Clean auto-sync without infinite React re-render loops
   useEffect(() => {
     if (!isHydrated) return;
 
-    syncWithCloud();
+    useStore.getState().syncWithCloud();
 
     const interval = setInterval(() => {
-      syncWithCloud();
-    }, 3000);
+      useStore.getState().syncWithCloud();
+    }, 5000);
 
     const handleFocus = () => {
-      syncWithCloud();
+      useStore.getState().syncWithCloud();
     };
     window.addEventListener("focus", handleFocus);
 
@@ -111,7 +110,7 @@ export default function Home() {
       clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [isHydrated, syncWithCloud]);
+  }, [isHydrated]);
 
   // Background pre-fetch real official album covers & preview URLs for cards stored in localStorage
   useEffect(() => {
@@ -284,14 +283,16 @@ export default function Home() {
   // Config Input fields
   const [tempClientId, setTempClientId] = useState("");
   const [tempGeminiKey, setTempGeminiKey] = useState("");
+  const [tempSyncCode, setTempSyncCode] = useState("");
 
   // Keep input fields synchronized with store state once hydrated
   useEffect(() => {
     if (isHydrated) {
       setTempClientId(spotifyClientId);
       setTempGeminiKey(geminiKey);
+      setTempSyncCode(syncCode);
     }
-  }, [isHydrated, spotifyClientId, geminiKey]);
+  }, [isHydrated, spotifyClientId, geminiKey, syncCode]);
 
   // Copy share URL handler
   const handleCopyShareLink = () => {
@@ -979,7 +980,7 @@ export default function Home() {
                       </span>
                       <button
                         onClick={() => {
-                          syncWithCloud();
+                          useStore.getState().syncWithCloud();
                           alert("글로벌 서버에서 최신 데이터베이스를 동기화했습니다!");
                         }}
                         className="text-blue-400 font-bold underline hover:text-blue-300"

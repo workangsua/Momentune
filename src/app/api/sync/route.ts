@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 const GLOBAL_DB_OBJECT_ID = "ff8081819f7e10ae019fb48a72e55002";
 
 export async function GET() {
@@ -45,8 +47,6 @@ export async function POST(request: Request) {
 
     if (res.ok) {
       return NextResponse.json({ success: true, payload });
-    } else {
-      console.error("Global DB PUT failed:", await res.text());
     }
   } catch (err: any) {
     console.error("Global DB POST error:", err);
