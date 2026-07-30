@@ -1,4 +1,4 @@
-// Reliable audio highlight preview player for Momentune
+// High-fidelity song highlight preview player for Momentune
 let globalAudio: HTMLAudioElement | null = null;
 let audioCtx: AudioContext | null = null;
 
@@ -16,76 +16,63 @@ export const initAudioContext = () => {
   }
 };
 
-// Play soothing ambient chords using Web Audio API as 100% fail-safe for Safari / offline
-export const playMelodicFallback = () => {
-  initAudioContext();
-  if (!audioCtx) return;
-
+// Search iTunes API for the exact 30-second song climax preview
+export const fetchSongClimaxPreview = async (artist: string, title: string): Promise<string | null> => {
   try {
-    const now = audioCtx.currentTime;
-    // Ambient C Major 7th chord notes (C, E, G, B)
-    const notes = [261.63, 329.63, 392.00, 493.88, 523.25];
-    notes.forEach((freq, idx) => {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, now + idx * 0.3);
-
-      gain.gain.setValueAtTime(0.001, now + idx * 0.3);
-      gain.gain.exponentialRampToValueAtTime(0.12, now + idx * 0.3 + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.3 + 3.5);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start(now + idx * 0.3);
-      osc.stop(now + idx * 0.3 + 3.6);
-    });
-  } catch (e) {
-    console.warn("Melodic fallback notice:", e);
+    const query = `${title} ${artist}`.trim();
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0 && data.results[0].previewUrl) {
+        return data.results[0].previewUrl;
+      }
+    }
+  } catch (err) {
+    console.warn("iTunes API preview fetch notice:", err);
   }
+  return null;
 };
 
-// Main function to play track preview audio
-export const playAudioPreview = (
-  previewUrl: string | undefined,
+// Play exact song climax audio preview
+export const playCardSongHighlight = async (
+  artist: string,
+  title: string,
+  existingPreviewUrl?: string,
   onEnd?: () => void
 ) => {
   initAudioContext();
-
-  // Stop previous global audio
   stopAudioPreview();
 
-  // Working fallback MP3 link
-  const mp3Url = previewUrl || "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3";
+  // 1. Check if we already have a working preview URL, or fetch real climax preview from iTunes Search API
+  let audioUrl = existingPreviewUrl;
+  if (!audioUrl || audioUrl.includes("soundhelix")) {
+    const fetchedUrl = await fetchSongClimaxPreview(artist, title);
+    if (fetchedUrl) {
+      audioUrl = fetchedUrl;
+    }
+  }
+
+  if (!audioUrl) {
+    console.warn("No real preview URL found for song:", title);
+    return;
+  }
 
   try {
-    globalAudio = new Audio();
-    globalAudio.crossOrigin = "anonymous";
-    globalAudio.src = mp3Url;
-    globalAudio.volume = 0.7;
+    globalAudio = new Audio(audioUrl);
+    globalAudio.volume = 0.75;
 
     const playPromise = globalAudio.play();
-
     if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          // Playing successfully
-        })
-        .catch((err) => {
-          console.warn("MP3 playback notice (falling back to Web Audio synth):", err);
-          playMelodicFallback();
-        });
+      playPromise.catch((err) => {
+        console.warn("Audio play notice:", err);
+      });
     }
 
     globalAudio.onended = () => {
       if (onEnd) onEnd();
     };
   } catch (err) {
-    console.warn("Audio creation error, playing synth fallback:", err);
-    playMelodicFallback();
+    console.warn("Audio creation error:", err);
   }
 };
 

@@ -26,7 +26,7 @@ import {
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens } from "../utils/spotify";
 import { generateAIReason } from "../utils/gemini";
-import { playAudioPreview, stopAudioPreview, initAudioContext } from "../utils/audio";
+import { playCardSongHighlight, stopAudioPreview, initAudioContext } from "../utils/audio";
 import { MusicCard, AIPersona } from "../types";
 
 export default function Home() {
@@ -63,7 +63,7 @@ export default function Home() {
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
 
   // Play climax/highlight audio preview on hover or tap
-  const handlePlayPreview = (card: MusicCard) => {
+  const handlePlayPreview = async (card: MusicCard) => {
     initAudioContext();
 
     if (playingCardId === card.id) {
@@ -73,7 +73,7 @@ export default function Home() {
     }
 
     setPlayingCardId(card.id);
-    playAudioPreview(card.track.previewUrl, () => {
+    await playCardSongHighlight(card.track.artist, card.track.title, card.track.previewUrl, () => {
       setPlayingCardId(null);
     });
   };
@@ -365,7 +365,7 @@ export default function Home() {
                   <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
                       <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드를 클릭하거나 터치하면 하이라이트 미리보기가 재생됩니다.</p>
+                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드를 클릭하거나 터치하면 실제 곡의 하이라이트 미리보기가 재생됩니다.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
