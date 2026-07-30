@@ -32,17 +32,7 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
   ]
 };
 
-// Official Google Gemini REST API endpoints for v1beta & v1
-const GEMINI_ENDPOINTS = [
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent",
-  "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
-];
-
-// Diagnostic test for Gemini API Connection targeting v1beta Gemini 1.5 & 2.0 endpoints
+// Diagnostic test for Gemini API Connection via Dynamic ListModels Discovery
 export const testGeminiConnection = async (apiKey?: string | null): Promise<{ success: boolean; message: string }> => {
   const rawKey =
     apiKey ||
@@ -54,45 +44,68 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
     return { success: false, message: "Gemini API Key가 입력되지 않았습니다. 설정 탭의 Gemini API Key에 키를 입력하고 [저장]을 눌러주세요." };
   }
 
-  // Sanitize key (strip quotes, newlines, spaces)
   const cleanKey = rawKey.trim().replace(/^["']|["']$/g, '');
 
-  let lastErrorMsg = "";
-
-  for (const endpointUrl of GEMINI_ENDPOINTS) {
-    try {
-      const response = await fetch(`${endpointUrl}?key=${encodeURIComponent(cleanKey)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "Hello Gemini" }] }],
-          generationConfig: { maxOutputTokens: 15 }
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          const modelName = endpointUrl.split('/models/')[1]?.split(':')[0] || 'Gemini 1.5';
-          return { success: true, message: `✅ Gemini AI 실시간 연결 완료! (버전: v1beta / 모델: ${modelName})` };
-        }
-      } else {
-        const errJson = await response.json().catch(() => null);
-        const errMsg = errJson?.error?.message || response.statusText || "알 수 없는 오류";
-        lastErrorMsg = `[HTTP ${response.status}] ${errMsg}`;
-
-        // If HTTP 400, 401, 403 API Key Error, return immediately
-        if (response.status === 400 || response.status === 401 || response.status === 403) {
-          return { success: false, message: `❌ Gemini API 키 오류: ${lastErrorMsg}` };
-        }
+  try {
+    // Dynamic query to ListModels endpoint
+    const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`, {
+      headers: {
+        'x-goog-api-key': cleanKey
       }
-    } catch (e: any) {
-      lastErrorMsg = e?.message || "네트워크 통신 오류";
-    }
-  }
+    });
 
-  return { success: false, message: `❌ Gemini API 연결 실패: ${lastErrorMsg}` };
+    if (!listRes.ok) {
+      const errJson = await listRes.json().catch(() => null);
+      const errMsg = errJson?.error?.message || listRes.statusText || "알 수 없는 오류";
+      return { success: false, message: `❌ Gemini API Key 인증 오류 [HTTP ${listRes.status}]: ${errMsg}` };
+    }
+
+    const listData = await listRes.json();
+    const availableModels: string[] = [];
+
+    if (listData?.models && Array.isArray(listData.models)) {
+      listData.models.forEach((m: any) => {
+        if (m.name && m.supportedGenerationMethods?.includes("generateContent")) {
+          availableModels.push(m.name);
+        }
+      });
+    }
+
+    if (availableModels.length === 0) {
+      return { success: false, message: "❌ Gemini API Key가 승인되었으나 generateContent 지원 모델을 찾지 못했습니다." };
+    }
+
+    // Target the best model available (prefer gemini-1.5-flash or first available)
+    const targetModel = availableModels.find(m => m.includes("gemini-1.5-flash")) || availableModels[0];
+
+    // Test generateContent on the dynamically discovered model
+    const generateRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/${targetModel}:generateContent?key=${encodeURIComponent(cleanKey)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': cleanKey
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "Hello Gemini" }] }],
+        generationConfig: { maxOutputTokens: 15 }
+      })
+    });
+
+    if (generateRes.ok) {
+      const genData = await generateRes.json();
+      const text = genData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        const displayModel = targetModel.replace('models/', '');
+        return { success: true, message: `✅ Gemini AI 실시간 연동 완벽 성공! (실시간 활성화 모델: ${displayModel})` };
+      }
+    }
+
+    const genErrJson = await generateRes.json().catch(() => null);
+    const genErrMsg = genErrJson?.error?.message || generateRes.statusText;
+    return { success: false, message: `❌ Gemini AI 생성 오류 [HTTP ${generateRes.status}]: ${genErrMsg}` };
+  } catch (e: any) {
+    return { success: false, message: `❌ 통신 실패: ${e?.message || "네트워크 오류"}` };
+  }
 };
 
 // Generate AI Reason via Gemini API or Fallback Templates
@@ -160,41 +173,60 @@ export const generateAIReason = async (
 4. 마크다운 기호(예: **, ##)는 절대 사용하지 마세요. 완성된 본문 문구만 바로 출력하세요.
 `;
 
-  for (const endpointUrl of GEMINI_ENDPOINTS) {
+  try {
+    // Fetch ListModels dynamically to get working model for this Key
+    let targetModel = "models/gemini-1.5-flash";
     try {
-      const response = await fetch(`${endpointUrl}?key=${encodeURIComponent(geminiKey)}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            maxOutputTokens: 200,
-            temperature: 0.75
-          }
-        })
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(geminiKey)}`, {
+        headers: { 'x-goog-api-key': geminiKey }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (resultText) {
-          return resultText.trim();
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        if (listData?.models && Array.isArray(listData.models)) {
+          const valid = listData.models.filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"));
+          if (valid.length > 0) {
+            const found = valid.find((m: any) => m.name.includes("gemini-1.5-flash"));
+            targetModel = found ? found.name : valid[0].name;
+          }
         }
       }
-    } catch (error) {
-      console.warn(`Gemini API call failed for ${endpointUrl}:`, error);
+    } catch (e) {
+      console.warn("Dynamic ListModels query warning:", e);
     }
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${targetModel}:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': geminiKey
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          maxOutputTokens: 200,
+          temperature: 0.75
+        }
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (resultText) {
+        return resultText.trim();
+      }
+    }
+  } catch (error) {
+    console.warn("Gemini API generation call failed:", error);
   }
 
   // Fallback if API call fails
