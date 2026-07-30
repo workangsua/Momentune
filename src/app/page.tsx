@@ -22,7 +22,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Volume2,
-  Cloud
+  Cloud,
+  Share2,
+  Copy
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
@@ -90,6 +92,18 @@ export default function Home() {
 
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
+
+  // Auto-connect to shared link code e.g. ?sync=SUA-7892
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const syncParam = urlParams.get("sync") || urlParams.get("syncCode");
+
+    if (syncParam) {
+      setSyncCode(syncParam);
+    }
+  }, [isHydrated, setSyncCode]);
 
   // Background pre-fetch real official album covers & preview URLs for cards stored in localStorage
   useEffect(() => {
@@ -273,6 +287,14 @@ export default function Home() {
     }
   }, [isHydrated, spotifyClientId, geminiKey, syncCode]);
 
+  // Copy share URL handler
+  const handleCopyShareLink = () => {
+    if (typeof window === "undefined") return;
+    const shareUrl = `${window.location.origin}/?sync=${encodeURIComponent(syncCode)}`;
+    navigator.clipboard.writeText(shareUrl);
+    alert(`내 음악 카드 전용 공유 링크가 복사되었습니다!\n\n${shareUrl}\n\n이 링크를 전달하면 친구나 다른 사람도 내가 만든 카드를 그대로 볼 수 있습니다.`);
+  };
+
   // Generate Music Card Handler
   const handleCreateCard = async () => {
     const currentSub = getSubOptions(selectedParentId);
@@ -433,10 +455,22 @@ export default function Home() {
           className="flex flex-col items-center gap-1"
         >
           <h1 className="text-3xl font-black tracking-widest text-zinc-100 font-sans">MOMENTUNE</h1>
-          {/* Cloud Sync indicator chip */}
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-400 mt-1">
-            <Cloud className={`h-3 w-3 ${isSyncing ? "text-blue-400 animate-spin" : "text-emerald-400"}`} />
-            <span>클라우드 동기화 코드: <code className="text-blue-300 font-mono">{syncCode}</code></span>
+          
+          {/* Cloud Sync indicator & Share Link chip */}
+          <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-400">
+              <Cloud className={`h-3 w-3 ${isSyncing ? "text-blue-400 animate-spin" : "text-emerald-400"}`} />
+              <span>동기화 코드: <code className="text-blue-300 font-mono">{syncCode}</code></span>
+            </div>
+            
+            <button
+              onClick={handleCopyShareLink}
+              className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-[9px] font-bold text-blue-300 hover:bg-blue-600/30 transition"
+              title="내 음악 카드 공유 링크 복사"
+            >
+              <Share2 className="h-2.5 w-2.5 text-blue-400" />
+              <span>공유 링크 복사</span>
+            </button>
           </div>
         </motion.div>
       </header>
@@ -957,13 +991,10 @@ export default function Home() {
                         현재 코드: <code className="text-blue-300 font-bold font-mono bg-black/40 px-1.5 py-0.5 rounded">{syncCode}</code>
                       </span>
                       <button
-                        onClick={() => {
-                          syncWithCloud();
-                          alert("클라우드에서 최신 카드를 불러와 동기화했습니다!");
-                        }}
-                        className="text-blue-400 font-bold underline hover:text-blue-300"
+                        onClick={handleCopyShareLink}
+                        className="text-blue-400 font-bold underline hover:text-blue-300 flex items-center gap-1"
                       >
-                        지금 즉시 동기화 (Sync Now)
+                        <Share2 className="h-3 w-3" /> 내 공유 링크 복사
                       </button>
                     </div>
                   </div>
