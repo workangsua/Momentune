@@ -13,6 +13,7 @@ export interface MusicCard {
     artist: string;            // Artist name
     albumCover: string;        // Album cover URL
     spotifyUrl: string;        // Spotify deep link or web player link
+    previewUrl?: string;       // 30-second audio preview MP3 link
     id?: string;               // Spotify track ID (optional)
   };
   aiReason: string;            // AI-generated recommendation reason

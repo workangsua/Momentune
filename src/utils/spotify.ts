@@ -275,6 +275,7 @@ export const getRandomTrack = async (
           artist: item.artists.map((a: any) => a.name).join(', '),
           albumCover: item.album.images[0]?.url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80',
           spotifyUrl: item.external_urls.spotify,
+          previewUrl: item.preview_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
           id: item.id
         };
       }
@@ -291,6 +292,7 @@ export const getRandomTrack = async (
           artist: track.artists.map((a: any) => a.name).join(', '),
           albumCover: track.album.images[0]?.url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80',
           spotifyUrl: track.external_urls.spotify,
+          previewUrl: track.preview_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
           id: track.id
         };
       }
@@ -309,7 +311,8 @@ export const getRandomTrack = async (
     title: randTrack.title,
     artist: randTrack.artist,
     albumCover: randTrack.albumCover,
-    spotifyUrl: randTrack.spotifyUrl
+    spotifyUrl: randTrack.spotifyUrl,
+    previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
   };
 };
 

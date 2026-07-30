@@ -20,7 +20,8 @@ import {
   Lock,
   Unlock,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Volume2
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens } from "../utils/spotify";
@@ -56,6 +57,54 @@ export default function Home() {
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  // Audio highlight preview state
+  const [playingCardId, setPlayingCardId] = useState<string | null>(null);
+  const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
+
+  // Play climax/highlight audio preview on hover or tap
+  const playTrackPreview = (card: MusicCard) => {
+    const previewUrl = card.track.previewUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+
+    if (playingCardId === card.id && audioInstance) {
+      audioInstance.pause();
+      setPlayingCardId(null);
+      return;
+    }
+
+    if (audioInstance) {
+      audioInstance.pause();
+    }
+
+    try {
+      const newAudio = new Audio(previewUrl);
+      newAudio.volume = 0.6;
+      newAudio.play().catch((err) => console.log("Audio preview play notice:", err));
+      newAudio.onended = () => {
+        setPlayingCardId(null);
+      };
+      setAudioInstance(newAudio);
+      setPlayingCardId(card.id);
+    } catch (e) {
+      console.warn("Audio element error:", e);
+    }
+  };
+
+  const stopTrackPreview = () => {
+    if (audioInstance) {
+      audioInstance.pause();
+      setPlayingCardId(null);
+    }
+  };
+
+  // Cleanup audio on tab switch or unmount
+  useEffect(() => {
+    return () => {
+      if (audioInstance) {
+        audioInstance.pause();
+      }
+    };
+  }, [audioInstance, activeTab]);
 
   // Handle Spotify Redirect Callback
   useEffect(() => {
@@ -331,7 +380,7 @@ export default function Home() {
                   <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
                       <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">옆으로 밀거나 아래 버튼으로 넘겨 보세요.</p>
+                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드를 올리거나 터치하면 하이라이트 미리보기가 재생됩니다.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
@@ -342,7 +391,7 @@ export default function Home() {
                   </div>
 
                   {/* 3D Swipe Stack Container */}
-                  <div className="relative h-[510px] w-full flex items-center justify-center overflow-visible mt-4">
+                  <div className="relative h-[530px] w-full flex items-center justify-center overflow-visible mt-4">
                     <AnimatePresence initial={false}>
                       {todayCards.map((card, idx) => {
                         const offset = idx - activeIndex;
@@ -379,16 +428,20 @@ export default function Home() {
                                 setActiveIndex(activeIndex - 1);
                               }
                             }}
-                            className="absolute w-full max-w-[310px] overflow-visible"
+                            onMouseEnter={() => isActive && playTrackPreview(card)}
+                            onMouseLeave={() => stopTrackPreview()}
+                            onClick={() => isActive && playTrackPreview(card)}
+                            className="absolute w-full max-w-[310px] overflow-visible cursor-pointer"
                           >
-                            {/* Protruding Blue Tab Layered BEHIND the Main Card (Matches User Sketch Mockup 100%) */}
+                            {/* Protruding Blue Tab Layered BEHIND Main Card - Extended down by 36px so it's 100% visible */}
                             <a
                               href={card.track.spotifyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="absolute bottom-[-24px] left-1/2 -translate-x-1/2 w-[84%] h-20 rounded-b-[24px] bg-gradient-to-b from-[#0080ff] to-[#0055ff] flex items-end justify-center pb-2.5 shadow-lg cursor-pointer transition-transform hover:translate-y-0.5 z-0 group border border-blue-400/30"
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[84%] h-24 rounded-b-[24px] bg-gradient-to-b from-[#0080ff] to-[#0055ff] flex items-end justify-center pb-3.5 shadow-lg cursor-pointer transition-transform hover:translate-y-0.5 z-0 group border border-blue-400/30"
                             >
-                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm mb-0.5">
+                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm">
                                 <Music className="h-3.5 w-3.5 animate-pulse text-white" />
                                 <span>SPOTIFY PLAY</span>
                                 <ExternalLink className="h-3 w-3 opacity-80" />
@@ -420,6 +473,14 @@ export default function Home() {
                                   ))}
                                 </div>
 
+                                {/* Playing audio highlight indicator */}
+                                {playingCardId === card.id && (
+                                  <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 backdrop-blur-md border border-white/20 px-2.5 py-1 text-[9px] text-white font-bold animate-pulse shadow-lg">
+                                    <Volume2 className="h-3 w-3 animate-bounce" />
+                                    <span>HIGHLIGHT PLAYING</span>
+                                  </div>
+                                )}
+
                                 {/* Timestamp */}
                                 <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
                                   <span className="text-[9px] text-zinc-300 font-bold font-mono">
@@ -436,7 +497,8 @@ export default function Home() {
                                     <p className="text-xs text-blue-300 font-bold tracking-wide uppercase mt-1 drop-shadow-sm">{card.track.artist}</p>
                                   </div>
                                   <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       deleteCard(card.id, false);
                                       if (activeIndex > 0) setActiveIndex(activeIndex - 1);
                                     }}
@@ -464,7 +526,7 @@ export default function Home() {
 
                   {/* Navigation Helper Buttons and Indicators */}
                   {todayCards.length > 1 && (
-                    <div className="flex flex-col items-center gap-3 mt-2">
+                    <div className="flex flex-col items-center gap-3 mt-4">
                       <div className="flex items-center gap-8">
                         <button
                           onClick={() => activeIndex > 0 && setActiveIndex(activeIndex - 1)}
@@ -568,15 +630,22 @@ export default function Home() {
 
                         <div className="flex flex-col gap-8">
                           {cards.map((card) => (
-                            <div key={card.id} className="relative group overflow-visible">
-                              {/* Protruding Blue Tab Layered BEHIND Main Card */}
+                            <div
+                              key={card.id}
+                              onMouseEnter={() => playTrackPreview(card)}
+                              onMouseLeave={() => stopTrackPreview()}
+                              onClick={() => playTrackPreview(card)}
+                              className="relative group overflow-visible cursor-pointer"
+                            >
+                              {/* Protruding Blue Tab Layered BEHIND Main Card - Extended down by 36px */}
                               <a
                                 href={card.track.spotifyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="absolute bottom-[-24px] left-1/2 -translate-x-1/2 w-[84%] h-20 rounded-b-[24px] bg-gradient-to-b from-[#0080ff] to-[#0055ff] flex items-end justify-center pb-2.5 shadow-lg cursor-pointer transition-transform hover:translate-y-0.5 z-0 group border border-blue-400/30"
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute bottom-[-36px] left-1/2 -translate-x-1/2 w-[84%] h-24 rounded-b-[24px] bg-gradient-to-b from-[#0080ff] to-[#0055ff] flex items-end justify-center pb-3.5 shadow-lg cursor-pointer transition-transform hover:translate-y-0.5 z-0 group border border-blue-400/30"
                               >
-                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm mb-0.5">
+                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest drop-shadow-sm">
                                   <Music className="h-3.5 w-3.5 animate-pulse text-white" />
                                   <span>SPOTIFY PLAY</span>
                                   <ExternalLink className="h-3 w-3 opacity-80" />
@@ -607,6 +676,14 @@ export default function Home() {
                                     ))}
                                   </div>
 
+                                  {/* Playing audio highlight indicator */}
+                                  {playingCardId === card.id && (
+                                    <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 backdrop-blur-md border border-white/20 px-2.5 py-1 text-[9px] text-white font-bold animate-pulse shadow-lg">
+                                      <Volume2 className="h-3 w-3 animate-bounce" />
+                                      <span>HIGHLIGHT PLAYING</span>
+                                    </div>
+                                  )}
+
                                   {/* stamp */}
                                   <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
                                     <span className="text-[9px] text-zinc-300 font-bold font-mono">
@@ -623,7 +700,10 @@ export default function Home() {
                                       <p className="text-xs text-blue-300 font-bold tracking-wide uppercase mt-1 drop-shadow-sm">{card.track.artist}</p>
                                     </div>
                                     <button
-                                      onClick={() => deleteCard(card.id, true)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteCard(card.id, true);
+                                      }}
                                       className="text-zinc-400 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/10"
                                       title="카드 삭제"
                                     >
