@@ -22,12 +22,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Volume2,
-  Database
+  Database,
+  RefreshCw
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
 import { generateAIReason } from "../utils/gemini";
 import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl } from "../utils/audio";
+import { testSupabaseConnection } from "../utils/supabase";
 import { MusicCard, AIPersona } from "../types";
 
 // Helper to balance cards around the latest card in the center, with older cards peeking on both left & right
@@ -265,6 +267,17 @@ export default function Home() {
   const [tempGeminiKey, setTempGeminiKey] = useState("");
   const [tempSbUrl, setTempSbUrl] = useState("");
   const [tempSbKey, setTempSbKey] = useState("");
+
+  const [testResult, setTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [isTestingSb, setIsTestingSb] = useState(false);
+
+  const handleTestSupabase = async () => {
+    setIsTestingSb(true);
+    setTestResult(null);
+    const res = await testSupabaseConnection(tempSbUrl, tempSbKey);
+    setTestResult(res);
+    setIsTestingSb(false);
+  };
 
   // Keep input fields synchronized with store state once hydrated
   useEffect(() => {
@@ -915,9 +928,16 @@ export default function Home() {
 
                   {/* Supabase Database config panel */}
                   <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Database className="h-5 w-5 text-emerald-400" />
-                      <h3 className="text-sm font-bold text-zinc-200">Supabase 데이터베이스 연동</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Database className="h-5 w-5 text-emerald-400" />
+                        <h3 className="text-sm font-bold text-zinc-200">Supabase 데이터베이스 연동</h3>
+                      </div>
+                      {isSyncing && (
+                        <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" /> 동기화 중...
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -930,7 +950,7 @@ export default function Home() {
                           value={tempSbUrl}
                           onChange={(e) => setTempSbUrl(e.target.value)}
                           placeholder="https://your-project.supabase.co"
-                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white placeholder-zinc-550 focus:outline-none focus:border-blue-500/50"
+                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white placeholder-zinc-550 focus:outline-none focus:border-blue-500/50 font-mono"
                         />
                       </div>
 
@@ -943,22 +963,45 @@ export default function Home() {
                           value={tempSbKey}
                           onChange={(e) => setTempSbKey(e.target.value)}
                           placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white placeholder-zinc-550 focus:outline-none focus:border-blue-500/50"
+                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white placeholder-zinc-550 focus:outline-none focus:border-blue-500/50 font-mono"
                         />
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setSupabaseConfig(tempSbUrl, tempSbKey);
-                          alert("Supabase 연동 정보가 저장되었습니다.");
-                        }}
-                        className="mt-1 w-full rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm"
-                      >
-                        Supabase 연동 정보 저장
-                      </button>
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        <button
+                          onClick={handleTestSupabase}
+                          disabled={isTestingSb || !tempSbUrl || !tempSbKey}
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-3 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 transition disabled:opacity-40"
+                        >
+                          {isTestingSb ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                          연동 테스트
+                        </button>
 
-                      <div className="mt-2 text-[10px] text-zinc-450 bg-black/30 rounded-xl p-3 border border-white/5 leading-relaxed font-mono">
-                        <span className="text-zinc-300 font-bold block mb-1 font-sans">※ Supabase 테이블 생성 SQL 스니펫:</span>
+                        <button
+                          onClick={() => {
+                            setSupabaseConfig(tempSbUrl, tempSbKey);
+                            alert("Supabase 연동 정보가 저장되었습니다.");
+                          }}
+                          className="rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-sm"
+                        >
+                          설정 저장 및 동기화
+                        </button>
+                      </div>
+
+                      {/* Connection Diagnostic Message Banner */}
+                      {testResult && (
+                        <div className={`p-3 rounded-xl border text-[11px] leading-relaxed font-semibold ${
+                          testResult.success 
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                            : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                        }`}>
+                          {testResult.message}
+                        </div>
+                      )}
+
+                      <div className="mt-2 text-[10px] text-zinc-450 bg-black/30 rounded-xl p-3.5 border border-white/5 leading-relaxed font-mono">
+                        <span className="text-zinc-200 font-bold block mb-1 font-sans">※ Supabase 테이블 및 RLS 해제 SQL 스니펫:</span>
+                        <span className="text-emerald-400 font-semibold block mb-1">-- 1. music_cards 테이블 생성</span>
                         create table music_cards (<br />
                         &nbsp;&nbsp;id uuid primary key,<br />
                         &nbsp;&nbsp;created_at timestamptz default now(),<br />
@@ -966,7 +1009,9 @@ export default function Home() {
                         &nbsp;&nbsp;context jsonb,<br />
                         &nbsp;&nbsp;track jsonb,<br />
                         &nbsp;&nbsp;ai_reason text<br />
-                        );
+                        );<br /><br />
+                        <span className="text-emerald-400 font-semibold block mb-1">-- 2. RLS (보안 권한) 해제 (어디서든 읽기/쓰기 가능)</span>
+                        alter table music_cards disable row level security;
                       </div>
                     </div>
                   </div>
@@ -988,7 +1033,7 @@ export default function Home() {
                           value={tempClientId}
                           onChange={(e) => setTempClientId(e.target.value)}
                           placeholder="Spotify Developer Client ID 입력"
-                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-355 placeholder-zinc-550 focus:outline-none focus:border-blue-500/50 text-white"
+                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-355 placeholder-zinc-550 focus:outline-none focus:border-blue-500/50 text-white font-mono"
                         />
                       </div>
 
@@ -1049,7 +1094,7 @@ export default function Home() {
                             value={tempGeminiKey}
                             onChange={(e) => setTempGeminiKey(e.target.value)}
                             placeholder="Google Gemini API Key 입력"
-                            className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-850 placeholder-zinc-555 focus:outline-none focus:border-blue-500/50 text-white"
+                            className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-850 placeholder-zinc-555 focus:outline-none focus:border-blue-500/50 text-white font-mono"
                           />
                           <button
                             onClick={() => {
