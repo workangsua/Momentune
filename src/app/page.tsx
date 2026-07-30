@@ -26,7 +26,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
-import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
+import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata, testSpotifyConnection } from "../utils/spotify";
 import { generateAIReason } from "../utils/gemini";
 import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl, getCurrentPlaySessionId } from "../utils/audio";
 import { testSupabaseConnection } from "../utils/supabase";
@@ -291,6 +291,18 @@ export default function Home() {
     const res = await testSupabaseConnection(tempSbUrl, tempSbKey);
     setTestResult(res);
     setIsTestingSb(false);
+  };
+
+  // Spotify Diagnostic Test state
+  const [spotifyTestResult, setSpotifyTestResult] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [isTestingSpotify, setIsTestingSpotify] = useState(false);
+
+  const handleTestSpotify = async () => {
+    setIsTestingSpotify(true);
+    setSpotifyTestResult(null);
+    const res = await testSpotifyConnection(spotifyToken);
+    setSpotifyTestResult(res);
+    setIsTestingSpotify(false);
   };
 
   // Keep input fields synchronized with store state once hydrated
@@ -1100,6 +1112,29 @@ alter table music_cards disable row level security;`}
                             <span>사용자</span>
                             <span className="text-zinc-200 font-bold">{spotifyUser || '알 수 없음'}</span>
                           </div>
+
+                          {/* Spotify Diagnostic API Connection Test Button */}
+                          <div className="mt-2 flex flex-col gap-2">
+                            <button
+                              onClick={handleTestSpotify}
+                              disabled={isTestingSpotify}
+                              className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2.5 text-xs font-bold text-emerald-300 hover:bg-emerald-500/20 transition disabled:opacity-40"
+                            >
+                              {isTestingSpotify ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                              스포티파이 API 연동 테스트
+                            </button>
+
+                            {spotifyTestResult && (
+                              <div className={`p-3 rounded-xl border text-[11px] leading-relaxed font-semibold ${
+                                spotifyTestResult.success 
+                                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                                  : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                              }`}>
+                                {spotifyTestResult.message}
+                              </div>
+                            )}
+                          </div>
+
                           <button
                             onClick={() => setSpotifyToken(null, null, null)}
                             className="w-full mt-2 rounded-lg bg-zinc-900 border border-zinc-800 py-2.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition"

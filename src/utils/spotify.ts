@@ -230,10 +230,54 @@ export const querySpotifyApi = async (url: string, token: string) => {
     if (response.status === 401) {
       throw new Error("UNAUTHORIZED_SPOTIFY_TOKEN");
     }
-    throw new Error(`Spotify API error: ${response.statusText}`);
+    if (response.status === 403) {
+      throw new Error("SPOTIFY_API_403_FORBIDDEN");
+    }
+    throw new Error(`Spotify API error ${response.status}: ${response.statusText}`);
   }
 
   return response.json();
+};
+
+// Diagnostic connection test helper for Spotify Web API
+export const testSpotifyConnection = async (token: string | null): Promise<{ success: boolean; message: string; savedCount?: number; playlistCount?: number }> => {
+  if (!token) {
+    return { success: false, message: "Spotify 연동 토큰이 없습니다. 'Spotify 로그인 연동'을 해주세요." };
+  }
+
+  try {
+    const profile = await querySpotifyApi("https://api.spotify.com/v1/me", token);
+    const saved = await querySpotifyApi("https://api.spotify.com/v1/me/tracks?limit=10", token);
+    const playlists = await querySpotifyApi("https://api.spotify.com/v1/me/playlists?limit=10", token);
+
+    const savedCount = saved?.total ?? saved?.items?.length ?? 0;
+    const playlistCount = playlists?.total ?? playlists?.items?.length ?? 0;
+
+    return {
+      success: true,
+      savedCount,
+      playlistCount,
+      message: `✅ Spotify 연동 완벽 정상! (사용자: ${profile.display_name || profile.id}, 좋아요 수록곡: ${savedCount}개, 플레이리스트: ${playlistCount}개 감지됨)`
+    };
+  } catch (err: any) {
+    console.error("testSpotifyConnection error:", err);
+    if (err?.message?.includes("403") || err?.message?.includes("FORBIDDEN")) {
+      return {
+        success: false,
+        message: "❌ Spotify API 403 (권한 거부) 발생! Spotify Developer Dashboard > Users and Access 메뉴에 현재 스포티파이 계정 이메일을 추가해야 내 플리가 정상 수집됩니다."
+      };
+    }
+    if (err?.message?.includes("UNAUTHORIZED")) {
+      return {
+        success: false,
+        message: "⚠️ Spotify 인증 토큰이 만료되었습니다. 설정 탭에서 '연동 해제' 후 다시 'Spotify 로그인 연동'을 눌러주세요."
+      };
+    }
+    return {
+      success: false,
+      message: `⚠️ Spotify API 호출 에러: ${err?.message || "알 수 없는 오류"}`
+    };
+  }
 };
 
 // Fetch track recommendations strictly from user's registered playlists & library
