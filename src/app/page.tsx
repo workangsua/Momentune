@@ -24,7 +24,7 @@ import {
   Volume2
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
-import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens } from "../utils/spotify";
+import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
 import { generateAIReason } from "../utils/gemini";
 import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl } from "../utils/audio";
 import { MusicCard, AIPersona } from "../types";
@@ -62,12 +62,18 @@ export default function Home() {
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
 
-  // Background pre-fetch preview URLs for cards stored in localStorage that lack previewUrl
+  // Background pre-fetch real official album covers & preview URLs for cards stored in localStorage
   useEffect(() => {
     if (!isHydrated) return;
 
     const allCards = [...todayCards, ...historyCards];
     allCards.forEach(async (card) => {
+      if (!card.track.albumCover || card.track.albumCover.includes("unsplash")) {
+        const meta = await fetchSongMetadata(card.track.artist, card.track.title);
+        if (meta.albumCover) {
+          card.track.albumCover = meta.albumCover;
+        }
+      }
       if (!card.track.previewUrl) {
         const url = await fetchSongPreviewUrl(card.track.artist, card.track.title);
         if (url) {
@@ -511,7 +517,7 @@ export default function Home() {
                               {/* Soft Inner Blue Tint Blend */}
                               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/10 to-blue-600/40 pointer-events-none -z-10" />
 
-                              {/* Album Cover Art */}
+                              {/* Album Cover Art (Real Official Song Artwork) */}
                               <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/10 shadow-inner bg-black/20">
                                 <img
                                   src={card.track.albumCover}

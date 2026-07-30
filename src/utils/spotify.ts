@@ -1,7 +1,7 @@
 import { MusicCard } from '../types';
 import { fetchSongPreviewUrl } from './audio';
 
-// Curated local fallback database of famous real tracks matching user favorite playlists
+// Curated local fallback database of famous real tracks with authentic album artwork
 export interface FallbackTrack {
   title: string;
   artist: string;
@@ -12,69 +12,77 @@ export interface FallbackTrack {
 
 export const FALLBACK_TRACKS: FallbackTrack[] = [
   {
+    title: "Viva La Vida",
+    artist: "Coldplay",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0c/33/c4/0c33c4a2-1b1a-2895-71ad-20b1c0627e74/0094636803358.jpg/600x600bb.jpg",
+    spotifyUrl: "https://open.spotify.com/track/1E2RFG4x5aGZ1KjD6lC7aG",
+    genre: "rock"
+  },
+  {
     title: "115 million kilometer film",
     artist: "OFFICIAL HIGE DANDISM",
-    albumCover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/a4/09/a9/a409a96e-5f91-5366-51e4-845a7a9cb5bf/PCCA-04716.jpg/600x600bb.jpg",
     spotifyUrl: "https://open.spotify.com/track/10V4S0G91k4j6Fz6b32810",
     genre: "pop"
   },
   {
     title: "Pretender",
     artist: "OFFICIAL HIGE DANDISM",
-    albumCover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/f5/63/87/f56387fb-f0aa-b169-7988-82559e35928d/PCCA-04784.jpg/600x600bb.jpg",
     spotifyUrl: "https://open.spotify.com/track/5V4S0G91k4j6Fz6b32811",
     genre: "pop"
   },
   {
     title: "Ditto",
     artist: "NewJeans",
-    albumCover: "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?w=400&q=80",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/1c/b4/43/1cb4431e-4f05-4f47-2b72-040ef36b6d27/cover_NewJeans_OMG.jpg/600x600bb.jpg",
     spotifyUrl: "https://open.spotify.com/track/30V4S0G91k4j6Fz6b32812",
     genre: "kpop"
   },
   {
     title: "Through the Night (밤편지)",
     artist: "IU",
-    albumCover: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/64/0a/63/640a6311-64d9-5f2a-e837-77fb26ff38a0/cover_IU_Palette.jpg/600x600bb.jpg",
     spotifyUrl: "https://open.spotify.com/track/40V4S0G91k4j6Fz6b32813",
     genre: "ballad"
   },
   {
-    title: "Viva La Vida",
-    artist: "Coldplay",
-    albumCover: "https://images.unsplash.com/photo-1506015391300-4802dc74de2e?w=400&q=80",
-    spotifyUrl: "https://open.spotify.com/track/50V4S0G91k4j6Fz6b32814",
-    genre: "rock"
-  },
-  {
     title: "Spring Day (봄날)",
     artist: "BTS",
-    albumCover: "https://images.unsplash.com/photo-1518235506717-e1edb106f89b?w=400&q=80",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/05/88/50/05885068-18e3-0c46-7c05-b00abfb8e684/cover-YOU_NEVER_WALK_ALONE.jpg/600x600bb.jpg",
     spotifyUrl: "https://open.spotify.com/track/60V4S0G91k4j6Fz6b32815",
     genre: "kpop"
   },
   {
     title: "Cruel Summer",
     artist: "Taylor Swift",
-    albumCover: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80",
+    albumCover: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6c/fb/8f/6cfb8f80-0a86-7782-b75b-4ecdf8e8a614/19UMGIM70868.rgb.jpg/600x600bb.jpg",
     spotifyUrl: "https://open.spotify.com/track/70V4S0G91k4j6Fz6b32816",
     genre: "pop"
-  },
-  {
-    title: "Walking on Sunshine",
-    artist: "Katrina and the Waves",
-    albumCover: "https://images.unsplash.com/photo-1526218626217-dc65a29bb444?w=400&q=80",
-    spotifyUrl: "https://open.spotify.com/track/05wIrZR468iLsz29FGu76X",
-    genre: "pop"
-  },
-  {
-    title: "You Were Beautiful (예뻤어)",
-    artist: "DAY6",
-    albumCover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80",
-    spotifyUrl: "https://open.spotify.com/track/80V4S0G91k4j6Fz6b32817",
-    genre: "band"
   }
 ];
+
+// Fetch official track metadata (high-res album cover & preview URL) from iTunes API
+export const fetchSongMetadata = async (artist: string, title: string) => {
+  try {
+    const query = `${title} ${artist}`.trim();
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const item = data.results[0];
+        const artwork = item.artworkUrl100 ? item.artworkUrl100.replace('100x100bb', '600x600bb') : null;
+        return {
+          previewUrl: item.previewUrl || undefined,
+          albumCover: artwork || undefined
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("iTunes metadata fetch notice:", err);
+  }
+  return {};
+};
 
 // Spotify Authentication Redirect
 export const redirectToSpotifyAuth = (clientId: string) => {
@@ -225,14 +233,22 @@ export const getRandomTrack = async (
         // Pick a random track strictly from user's registered playlists/library!
         const randTrack: any = uniqueUserTracks[Math.floor(Math.random() * uniqueUserTracks.length)];
         const artistName = randTrack.artists.map((a: any) => a.name).join(', ');
-        const previewUrl = randTrack.preview_url || (await fetchSongPreviewUrl(artistName, randTrack.name));
+        
+        let cover = randTrack.album?.images[0]?.url;
+        let preview = randTrack.preview_url;
+
+        if (!cover || cover.includes("unsplash") || !preview) {
+          const meta = await fetchSongMetadata(artistName, randTrack.name);
+          if (!cover || cover.includes("unsplash")) cover = meta.albumCover || cover;
+          if (!preview) preview = meta.previewUrl || preview;
+        }
 
         return {
           title: randTrack.name,
           artist: artistName,
-          albumCover: randTrack.album?.images[0]?.url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80',
+          albumCover: cover || 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/0c/33/c4/0c33c4a2-1b1a-2895-71ad-20b1c0627e74/0094636803358.jpg/600x600bb.jpg',
           spotifyUrl: randTrack.external_urls?.spotify || `https://open.spotify.com/track/${randTrack.id}`,
-          previewUrl: previewUrl,
+          previewUrl: preview,
           id: randTrack.id
         };
       }
@@ -243,13 +259,14 @@ export const getRandomTrack = async (
 
   // Fallback: Select from famous user-favorite playlist catalog
   const randTrack = FALLBACK_TRACKS[Math.floor(Math.random() * FALLBACK_TRACKS.length)];
-  const realPreviewUrl = await fetchSongPreviewUrl(randTrack.artist, randTrack.title);
+  const meta = await fetchSongMetadata(randTrack.artist, randTrack.title);
+
   return {
     title: randTrack.title,
     artist: randTrack.artist,
-    albumCover: randTrack.albumCover,
+    albumCover: meta.albumCover || randTrack.albumCover,
     spotifyUrl: randTrack.spotifyUrl,
-    previewUrl: realPreviewUrl
+    previewUrl: meta.previewUrl || (await fetchSongPreviewUrl(randTrack.artist, randTrack.title))
   };
 };
 
