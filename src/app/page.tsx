@@ -156,26 +156,39 @@ export default function Home() {
   }, [activeTab]);
 
   // Handle Spotify Redirect Callback
+  const [spotifyAuthError, setSpotifyAuthError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!isHydrated) return;
 
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
+    const errorParam = urlParams.get("error");
+
+    if (errorParam) {
+      setSpotifyAuthError(`스포티파이 로그인 거부됨: ${errorParam}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
 
     if (code) {
       const handleSpotifyCallback = async () => {
-        const storedClientId = localStorage.getItem("momentune_spotify_client_id") || spotifyClientId;
+        const storedClientId = localStorage.getItem("momentune_spotify_client_id") || spotifyClientId || process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
         if (!storedClientId) {
-          console.error("No Spotify Client ID configured for callback exchange.");
+          setSpotifyAuthError("Spotify Client ID가 설정되어 있지 않습니다.");
           return;
         }
 
         const data = await fetchSpotifyTokens(storedClientId, code);
-        if (data) {
+        if (data && data.token) {
           setSpotifyToken(data.token, data.refreshToken, data.user);
-          // Clean URL
-          window.history.replaceState({}, document.title, window.location.pathname);
+          setSpotifyAuthError(null);
+          alert(`🎉 스포티파이 계정(${data.user}) 연동 성공!`);
+        } else {
+          setSpotifyAuthError("스포티파이 토큰 인증 교환 실패. (Spotify Dashboard의 Redirect URI에 https://momentune-ai.vercel.app/ 등록 여부를 확인해 주세요.)");
         }
+        // Clean URL params
+        window.history.replaceState({}, document.title, window.location.pathname);
       };
       handleSpotifyCallback();
     }
@@ -955,6 +968,13 @@ export default function Home() {
                       다시 잠그기
                     </button>
                   </div>
+
+                  {/* Spotify Auth Error Banner */}
+                  {spotifyAuthError && (
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-300 p-3.5 rounded-2xl text-xs font-semibold leading-relaxed mb-1 shadow-md">
+                      ⚠️ {spotifyAuthError}
+                    </div>
+                  )}
 
                   {/* Supabase Database config panel */}
                   <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">

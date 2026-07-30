@@ -108,59 +108,62 @@ export const redirectToSpotifyAuth = (clientId: string) => {
   window.location.href = authUrl;
 };
 
-// Spotify Token Exchange Callback
+// Spotify Token Exchange Callback (Handles both trailing slash and non-trailing slash redirect URIs)
 export const fetchSpotifyTokens = async (
   clientId: string,
   code: string
 ): Promise<{ token: string; refreshToken: string; user: string } | null> => {
-  try {
-    const redirectUri = window.location.origin + "/";
-    const body = new URLSearchParams({
-      grant_type: "authorization_code",
-      code,
-      redirect_uri: redirectUri,
-      client_id: clientId,
-    });
+  if (typeof window === "undefined") return null;
 
-    const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: body.toString(),
-    });
+  const origin = window.location.origin;
+  const redirectUris = [origin + "/", origin];
 
-    if (!tokenRes.ok) {
-      console.error("Token exchange failed:", await tokenRes.text());
-      return null;
+  for (const redirectUri of redirectUris) {
+    try {
+      const body = new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+      });
+
+      const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: body.toString(),
+      });
+
+      if (tokenRes.ok) {
+        const tokenData = await tokenRes.json();
+        const accessToken = tokenData.access_token;
+        const refreshToken = tokenData.refresh_token;
+
+        // Fetch user profile name
+        const profileRes = await fetch("https://api.spotify.com/v1/me", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        let userName = "Spotify User";
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          userName = profile.display_name || profile.id || "Spotify User";
+        }
+
+        return {
+          token: accessToken,
+          refreshToken: refreshToken,
+          user: userName,
+        };
+      }
+    } catch (err) {
+      console.error("fetchSpotifyTokens attempt notice:", err);
     }
-
-    const tokenData = await tokenRes.json();
-    const accessToken = tokenData.access_token;
-    const refreshToken = tokenData.refresh_token;
-
-    // Fetch user profile name
-    const profileRes = await fetch("https://api.spotify.com/v1/me", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    let userName = "Spotify User";
-    if (profileRes.ok) {
-      const profile = await profileRes.json();
-      userName = profile.display_name || profile.id || "Spotify User";
-    }
-
-    return {
-      token: accessToken,
-      refreshToken: refreshToken,
-      user: userName,
-    };
-  } catch (err) {
-    console.error("fetchSpotifyTokens error:", err);
-    return null;
   }
+  return null;
 };
 
 // Silent Background Spotify Access Token Refresh via Refresh Token
