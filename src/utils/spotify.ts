@@ -163,6 +163,57 @@ export const fetchSpotifyTokens = async (
   }
 };
 
+// Silent Background Spotify Access Token Refresh via Refresh Token
+export const refreshSpotifyAccessToken = async (
+  clientId: string,
+  refreshToken: string
+): Promise<{ token: string; user: string } | null> => {
+  try {
+    const body = new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+      client_id: clientId,
+    });
+
+    const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: body.toString(),
+    });
+
+    if (!tokenRes.ok) {
+      console.error("Token refresh failed:", await tokenRes.text());
+      return null;
+    }
+
+    const tokenData = await tokenRes.json();
+    const newAccessToken = tokenData.access_token;
+
+    // Fetch user profile name
+    const profileRes = await fetch("https://api.spotify.com/v1/me", {
+      headers: {
+        Authorization: `Bearer ${newAccessToken}`,
+      },
+    });
+
+    let userName = "Spotify User";
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      userName = profile.display_name || profile.id || "Spotify User";
+    }
+
+    return {
+      token: newAccessToken,
+      user: userName,
+    };
+  } catch (err) {
+    console.error("refreshSpotifyAccessToken error:", err);
+    return null;
+  }
+};
+
 // Helper to query Spotify Web API
 export const querySpotifyApi = async (url: string, token: string) => {
   const response = await fetch(url, {
@@ -188,62 +239,106 @@ export const getRandomTrack = async (
   token: string | null,
   todayTrackKeys: string[] = []
 ): Promise<MusicCard['track']> => {
-  if (token) {
+  let activeToken = token;
+
+  // Attempt silent background refresh if activeToken is missing or expired
+  if (!activeToken && typeof window !== 'undefined') {
+    const refreshToken = localStorage.getItem('momentune_spotify_refresh_token');
+    const clientId = localStorage.getItem('momentune_spotify_client_id');
+    if (refreshToken && clientId) {
+      const refreshed = await refreshSpotifyAccessToken(clientId, refreshToken);
+      if (refreshed && refreshed.token) {
+        activeToken = refreshed.token;
+        localStorage.setItem('momentune_spotify_token', refreshed.token);
+      }
+    }
+  }
+
+  if (activeToken) {
     try {
-      const userTracks: any[] = [];
+      let userTracks: any[] = [];
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('momentune_spotify_refresh_token') : null;
+      const clientId = typeof window !== 'undefined' ? (localStorage.getItem('momentune_spotify_client_id') || process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID) : null;
 
-      // 1. Fetch User's Saved/Liked Tracks (/v1/me/tracks?limit=50)
-      try {
-        const savedData = await querySpotifyApi('https://api.spotify.com/v1/me/tracks?limit=50', token);
-        if (savedData?.items) {
-          savedData.items.forEach((item: any) => {
-            if (item.track && item.track.name && item.track.artists) {
-              userTracks.push(item.track);
-            }
-          });
+      const runFetchUserTracks = async (t: string) => {
+        const tracks: any[] = [];
+
+        // 1. Fetch User's Saved/Liked Tracks (/v1/me/tracks?limit=50)
+        try {
+          const savedData = await querySpotifyApi('https://api.spotify.com/v1/me/tracks?limit=50', t);
+          if (savedData?.items) {
+            savedData.items.forEach((item: any) => {
+              if (item.track && item.track.name && item.track.artists) {
+                tracks.push(item.track);
+              }
+            });
+          }
+        } catch (e: any) {
+          if (e?.message === 'UNAUTHORIZED_SPOTIFY_TOKEN') throw e;
+          console.warn("Saved tracks fetch notice:", e);
         }
-      } catch (e) {
-        console.warn("Saved tracks fetch notice:", e);
-      }
 
-      // 2. Fetch User's Top Listened Tracks (/v1/me/top/tracks?limit=50)
-      try {
-        const topData = await querySpotifyApi('https://api.spotify.com/v1/me/top/tracks?limit=50', token);
-        if (topData?.items) {
-          topData.items.forEach((t: any) => {
-            if (t && t.name && t.artists) {
-              userTracks.push(t);
-            }
-          });
+        // 2. Fetch User's Top Listened Tracks (/v1/me/top/tracks?limit=50)
+        try {
+          const topData = await querySpotifyApi('https://api.spotify.com/v1/me/top/tracks?limit=50', t);
+          if (topData?.items) {
+            topData.items.forEach((trackItem: any) => {
+              if (trackItem && trackItem.name && trackItem.artists) {
+                tracks.push(trackItem);
+              }
+            });
+          }
+        } catch (e: any) {
+          if (e?.message === 'UNAUTHORIZED_SPOTIFY_TOKEN') throw e;
+          console.warn("Top tracks fetch notice:", e);
         }
-      } catch (e) {
-        console.warn("Top tracks fetch notice:", e);
-      }
 
-      // 3. Fetch User's Playlists (/v1/me/playlists?limit=50) & ALL playlist tracks
-      try {
-        const playlistsData = await querySpotifyApi('https://api.spotify.com/v1/me/playlists?limit=50', token);
-        if (playlistsData?.items && playlistsData.items.length > 0) {
-          for (const pl of playlistsData.items) {
-            if (pl && pl.id) {
-              try {
-                const plTracksData = await querySpotifyApi(`https://api.spotify.com/v1/playlists/${pl.id}/tracks?limit=100`, token);
-                if (plTracksData?.items) {
-                  plTracksData.items.forEach((item: any) => {
-                    const t = item.track || item;
-                    if (t && t.name && t.artists) {
-                      userTracks.push(t);
-                    }
-                  });
+        // 3. Fetch User's Playlists (/v1/me/playlists?limit=50) & ALL playlist tracks
+        try {
+          const playlistsData = await querySpotifyApi('https://api.spotify.com/v1/me/playlists?limit=50', t);
+          if (playlistsData?.items && playlistsData.items.length > 0) {
+            for (const pl of playlistsData.items) {
+              if (pl && pl.id) {
+                try {
+                  const plTracksData = await querySpotifyApi(`https://api.spotify.com/v1/playlists/${pl.id}/tracks?limit=100`, t);
+                  if (plTracksData?.items) {
+                    plTracksData.items.forEach((item: any) => {
+                      const trackObj = item.track || item;
+                      if (trackObj && trackObj.name && trackObj.artists) {
+                        tracks.push(trackObj);
+                      }
+                    });
+                  }
+                } catch (e: any) {
+                  if (e?.message === 'UNAUTHORIZED_SPOTIFY_TOKEN') throw e;
+                  console.warn(`Playlist ${pl.id} tracks warning:`, e);
                 }
-              } catch (e) {
-                console.warn(`Playlist ${pl.id} tracks warning:`, e);
               }
             }
           }
+        } catch (e: any) {
+          if (e?.message === 'UNAUTHORIZED_SPOTIFY_TOKEN') throw e;
+          console.warn("Playlists fetch notice:", e);
         }
-      } catch (e) {
-        console.warn("Playlists fetch notice:", e);
+
+        return tracks;
+      };
+
+      try {
+        userTracks = await runFetchUserTracks(activeToken);
+      } catch (err: any) {
+        // If 401 token expired, trigger automatic silent background refresh and retry!
+        if (err?.message === 'UNAUTHORIZED_SPOTIFY_TOKEN' && refreshToken && clientId) {
+          console.log("Spotify access token expired. Refreshing token silently in background...");
+          const refreshed = await refreshSpotifyAccessToken(clientId, refreshToken);
+          if (refreshed && refreshed.token) {
+            activeToken = refreshed.token;
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('momentune_spotify_token', refreshed.token);
+            }
+            userTracks = await runFetchUserTracks(activeToken);
+          }
+        }
       }
 
       // Deduplicate user tracks by Spotify ID or Title-Artist key
