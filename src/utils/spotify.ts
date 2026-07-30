@@ -62,6 +62,26 @@ export const FALLBACK_TRACKS: FallbackTrack[] = [
   }
 ];
 
+// Helper PKCE generators for Spotify OAuth
+const generateRandomString = (length: number) => {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(values).reduce((acc, x) => acc + possible[x % possible.length], "");
+};
+
+const sha256 = async (plain: string) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plain);
+  return window.crypto.subtle.digest('SHA-256', data);
+};
+
+const base64encode = (input: ArrayBuffer) => {
+  return btoa(String.fromCharCode(...new Uint8Array(input)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+};
+
 // Fetch official track metadata (high-res album cover & preview URL) from iTunes API
 export const fetchSongMetadata = async (artist: string, title: string) => {
   try {
@@ -84,9 +104,14 @@ export const fetchSongMetadata = async (artist: string, title: string) => {
   return {};
 };
 
-// Spotify Authentication Redirect
-export const redirectToSpotifyAuth = (clientId: string) => {
+// Spotify PKCE Authentication Redirect
+export const redirectToSpotifyAuth = async (clientId: string) => {
   if (!clientId || typeof window === "undefined") return;
+  
+  const verifier = generateRandomString(64);
+  const hashed = await sha256(verifier);
+  const codeChallenge = base64encode(hashed);
+
   const redirectUri = window.location.origin + "/";
   const scopes = [
     "user-read-private",
@@ -98,34 +123,42 @@ export const redirectToSpotifyAuth = (clientId: string) => {
   ].join(" ");
 
   localStorage.setItem("momentune_spotify_client_id", clientId);
+  localStorage.setItem("momentune_spotify_code_verifier", verifier);
 
   const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${encodeURIComponent(
     clientId
   )}&scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(
     redirectUri
-  )}&show_dialog=true`;
+  )}&code_challenge_method=S256&code_challenge=${encodeURIComponent(codeChallenge)}&show_dialog=true`;
 
   window.location.href = authUrl;
 };
 
-// Spotify Token Exchange Callback (Handles both trailing slash and non-trailing slash redirect URIs)
+// Spotify Token Exchange Callback with PKCE Code Verifier
 export const fetchSpotifyTokens = async (
   clientId: string,
   code: string
 ): Promise<{ token: string; refreshToken: string; user: string } | null> => {
   if (typeof window === "undefined") return null;
 
+  const codeVerifier = localStorage.getItem("momentune_spotify_code_verifier");
   const origin = window.location.origin;
   const redirectUris = [origin + "/", origin];
 
   for (const redirectUri of redirectUris) {
     try {
-      const body = new URLSearchParams({
+      const payload: Record<string, string> = {
         grant_type: "authorization_code",
         code,
         redirect_uri: redirectUri,
         client_id: clientId,
-      });
+      };
+
+      if (codeVerifier) {
+        payload.code_verifier = codeVerifier;
+      }
+
+      const body = new URLSearchParams(payload);
 
       const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
         method: "POST",
@@ -158,6 +191,9 @@ export const fetchSpotifyTokens = async (
           refreshToken: refreshToken,
           user: userName,
         };
+      } else {
+        const errText = await tokenRes.text();
+        console.error(`Token exchange attempt failed for ${redirectUri}:`, errText);
       }
     } catch (err) {
       console.error("fetchSpotifyTokens attempt notice:", err);
