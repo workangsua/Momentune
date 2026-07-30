@@ -1,4 +1,5 @@
 import { MusicCard } from '../types';
+import { fetchSongPreviewUrl } from './audio';
 
 // Curated local fallback database of track recommendations mapped to tags
 export interface FallbackTrack {
@@ -270,12 +271,14 @@ export const getRandomTrack = async (
         // Draw a random item
         const randIndex = Math.floor(Math.random() * savedTracksData.items.length);
         const item = savedTracksData.items[randIndex].track;
+        const artistName = item.artists.map((a: any) => a.name).join(', ');
+        const previewUrl = item.preview_url || (await fetchSongPreviewUrl(artistName, item.name));
         return {
           title: item.name,
-          artist: item.artists.map((a: any) => a.name).join(', '),
+          artist: artistName,
           albumCover: item.album.images[0]?.url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80',
           spotifyUrl: item.external_urls.spotify,
-          previewUrl: item.preview_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          previewUrl: previewUrl,
           id: item.id
         };
       }
@@ -287,12 +290,14 @@ export const getRandomTrack = async (
       if (recData && recData.tracks && recData.tracks.length > 0) {
         const randIndex = Math.floor(Math.random() * recData.tracks.length);
         const track = recData.tracks[randIndex];
+        const artistName = track.artists.map((a: any) => a.name).join(', ');
+        const previewUrl = track.preview_url || (await fetchSongPreviewUrl(artistName, track.name));
         return {
           title: track.name,
-          artist: track.artists.map((a: any) => a.name).join(', '),
+          artist: artistName,
           albumCover: track.album.images[0]?.url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80',
           spotifyUrl: track.external_urls.spotify,
-          previewUrl: track.preview_url || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+          previewUrl: previewUrl,
           id: track.id
         };
       }
@@ -307,12 +312,13 @@ export const getRandomTrack = async (
   const pool = matchingTracks.length > 0 ? matchingTracks : FALLBACK_TRACKS;
   
   const randTrack = pool[Math.floor(Math.random() * pool.length)];
+  const realPreviewUrl = await fetchSongPreviewUrl(randTrack.artist, randTrack.title);
   return {
     title: randTrack.title,
     artist: randTrack.artist,
     albumCover: randTrack.albumCover,
     spotifyUrl: randTrack.spotifyUrl,
-    previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+    previewUrl: realPreviewUrl
   };
 };
 
