@@ -32,16 +32,15 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
   ]
 };
 
-// Candidate Gemini REST API model endpoints to auto-discover
+// Candidate Gemini REST API model endpoints to query
 const CANDIDATE_ENDPOINTS = [
   { version: "v1beta", model: "gemini-1.5-flash-latest" },
   { version: "v1beta", model: "gemini-2.0-flash" },
   { version: "v1beta", model: "gemini-2.0-flash-exp" },
-  { version: "v1", model: "gemini-1.5-flash" },
-  { version: "v1beta", model: "gemini-1.5-flash-8b" },
+  { version: "v1", model: "gemini-1.5-flash" }
 ];
 
-// Diagnostic test for Gemini API Connection with auto-discovery
+// Diagnostic test for Gemini API Connection targeting gemini-1.5-flash-latest with exact error reporting
 export const testGeminiConnection = async (apiKey?: string | null): Promise<{ success: boolean; message: string }> => {
   const geminiKey =
     apiKey ||
@@ -54,45 +53,39 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
   }
 
   const cleanKey = geminiKey.trim();
-  let apiKeyInvalidMsg = "";
 
   for (const ep of CANDIDATE_ENDPOINTS) {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/${ep.version}/models/${ep.model}:generateContent?key=${encodeURIComponent(cleanKey)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: "Hello" }] }],
-            generationConfig: { maxOutputTokens: 15 }
-          })
-        }
-      );
+      const url = `https://generativelanguage.googleapis.com/${ep.version}/models/${ep.model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Hello" }] }],
+          generationConfig: { maxOutputTokens: 15 }
+        })
+      });
 
       if (response.ok) {
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) {
-          return { success: true, message: `✅ Gemini AI 실시간 연결 성공! (${ep.model} 모델 반응 확인)` };
+          return { success: true, message: `✅ Gemini AI 실시간 연결 완벽 성공! (${ep.model} 모델 반응 확인)` };
         }
-      } else if (response.status === 400) {
+      } else {
         const errJson = await response.json().catch(() => null);
-        const errMsg = errJson?.error?.message || "API key not valid";
-        apiKeyInvalidMsg = errMsg;
-        // If API key itself is invalid, stop testing other models
-        break;
+        const errMsg = errJson?.error?.message || response.statusText || "알 수 없는 오류";
+        // If HTTP status is 400, 401, or 403, report exact error from Google API immediately
+        if (response.status === 400 || response.status === 401 || response.status === 403) {
+          return { success: false, message: `❌ Gemini API 호출 에러 [HTTP ${response.status}]: ${errMsg}` };
+        }
       }
     } catch (e: any) {
-      console.warn(`Model ${ep.model} test failed:`, e);
+      console.warn(`Endpoint ${ep.model} failed:`, e);
     }
   }
 
-  if (apiKeyInvalidMsg) {
-    return { success: false, message: `❌ Gemini API Key 오류 [HTTP 400]: ${apiKeyInvalidMsg}` };
-  }
-
-  return { success: false, message: "❌ Gemini API 호환 모델을 찾을 수 없습니다. Google AI Studio(aistudio.google.com)에서 발급받은 API Key인지 확인해 주세요." };
+  return { success: false, message: "❌ Gemini API 호출 실패. Google AI Studio(aistudio.google.com)에서 발급받은 API Key가 맞는지 확인해 주세요." };
 };
 
 // Generate AI Reason via Gemini API or Fallback Templates
@@ -163,7 +156,7 @@ export const generateAIReason = async (
   for (const ep of CANDIDATE_ENDPOINTS) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${ep.model}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+        `https://generativelanguage.googleapis.com/${ep.version}/models/${ep.model}:generateContent?key=${encodeURIComponent(geminiKey)}`,
         {
           method: 'POST',
           headers: {
