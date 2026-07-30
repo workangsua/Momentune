@@ -342,7 +342,7 @@ export default function Home() {
                   </div>
 
                   {/* 3D Swipe Stack Container */}
-                  <div className="relative h-[500px] w-full flex items-center justify-center overflow-hidden mt-4">
+                  <div className="relative h-[510px] w-full flex items-center justify-center overflow-visible mt-4">
                     <AnimatePresence initial={false}>
                       {todayCards.map((card, idx) => {
                         const offset = idx - activeIndex;
@@ -379,12 +379,15 @@ export default function Home() {
                                 setActiveIndex(activeIndex - 1);
                               }
                             }}
-                            className="absolute w-full max-w-[310px]"
+                            className="absolute w-full max-w-[310px] overflow-visible"
                           >
-                            {/* Premium Ticket Card Body */}
-                            <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                            {/* Glassmorphism Color Backdrop Object (Layered underneath to blur-through the card) */}
+                            <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 w-44 h-24 rounded-full bg-blue-500/80 blur-[28px] pointer-events-none -z-10" />
+
+                            {/* Premium Ticket Card Body (Frosted glass) */}
+                            <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-xl z-10">
                               
-                              {/* Large Album Cover Image (Instead of rotating player) */}
+                              {/* Large Album Cover Image */}
                               <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
                                 <img
                                   src={card.track.albumCover}
@@ -424,7 +427,7 @@ export default function Home() {
                                       deleteCard(card.id, false);
                                       if (activeIndex > 0) setActiveIndex(activeIndex - 1);
                                     }}
-                                    className="text-zinc-500 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/5"
+                                    className="text-zinc-550 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/5"
                                     title="카드 삭제"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -440,18 +443,18 @@ export default function Home() {
                               </div>
                             </div>
 
-                            {/* Protruding Ticket Stub (Spotify button) */}
+                            {/* Protruding Ticket Stub (Frosted Glass overlaying the colorful blue circle backdrop) */}
                             <a
                               href={card.track.spotifyUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                              className="relative z-10 -mt-4 mx-6 h-12 rounded-b-2xl bg-white/10 backdrop-blur-xl border-x border-b border-white/10 border-t border-dashed border-white/20 flex items-center justify-center shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
                             >
-                              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/5"></div>
-                              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/5"></div>
+                              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/10"></div>
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/10"></div>
 
-                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
-                                <Music className="h-3.5 w-3.5 animate-bounce" />
+                              <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest z-20">
+                                <Music className="h-3.5 w-3.5 text-blue-400 animate-bounce" />
                                 <span>SPOTIFY PLAY</span>
                                 <ExternalLink className="h-3 w-3 opacity-80" />
                               </div>
@@ -568,10 +571,13 @@ export default function Home() {
 
                         <div className="flex flex-col gap-8">
                           {cards.map((card) => (
-                            <div key={card.id} className="relative group">
-                              <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                            <div key={card.id} className="relative group overflow-visible">
+                              {/* Glassmorphism Color Backdrop Object */}
+                              <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 w-44 h-24 rounded-full bg-blue-500/80 blur-[28px] pointer-events-none -z-10" />
+
+                              <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-xl z-10">
                                 
-                                {/* Large Album Cover Image (Instead of rotating player) */}
+                                {/* Large Album Cover Image */}
                                 <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
                                   <img
                                     src={card.track.albumCover}
@@ -628,13 +634,13 @@ export default function Home() {
                                 href={card.track.spotifyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-blue-600 to-indigo-500 hover:from-blue-700 hover:to-indigo-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                                className="relative z-10 -mt-4 mx-6 h-12 rounded-b-2xl bg-white/10 backdrop-blur-xl border-x border-b border-white/10 border-t border-dashed border-white/20 flex items-center justify-center shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
                               >
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#0a0603] border-r border-white/5"></div>
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#0a0603] border-l border-white/5"></div>
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-r border-white/10"></div>
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#090d16] border-l border-white/10"></div>
 
-                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
-                                  <Music className="h-3.5 w-3.5 animate-bounce" />
+                                <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest z-20">
+                                  <Music className="h-3.5 w-3.5 text-blue-400 animate-bounce" />
                                   <span>SPOTIFY PLAY</span>
                                   <ExternalLink className="h-3 w-3 opacity-80" />
                                 </div>
@@ -667,7 +673,7 @@ export default function Home() {
                     <Lock className="h-6 w-6" />
                   </div>
                   <h3 className="text-base font-bold text-zinc-200">개인정보 설정 잠금 비밀번호 등록</h3>
-                  <p className="text-xs text-zinc-450 mt-2 leading-relaxed px-4">
+                  <p className="text-xs text-zinc-455 mt-2 leading-relaxed px-4">
                     설정에 들어갈 수 있는 비밀번호를 생성해 주세요.<br />
                     등록한 스포티파이 ID와 Gemini API Key 정보를 보호합니다.
                   </p>
@@ -864,7 +870,7 @@ export default function Home() {
 
                   {/* Passcode Reset / Data settings */}
                   <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
-                    <h3 className="text-xs font-bold text-zinc-450 mb-3">비밀번호 및 데이터 설정</h3>
+                    <h3 className="text-xs font-bold text-zinc-455 mb-3">비밀번호 및 데이터 설정</h3>
                     <div className="flex flex-col gap-2">
                       <button
                         onClick={() => {
@@ -1060,7 +1066,7 @@ export default function Home() {
                   <button
                     onClick={handleCreateCard}
                     disabled={!selectedMovement || !selectedActivity || !selectedWeather || !selectedMood}
-                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-750 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
+                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-755 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
                   >
                     AI 큐레이션 카드 추천받기
                   </button>
