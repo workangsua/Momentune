@@ -32,7 +32,7 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
   ]
 };
 
-// Diagnostic test for Gemini API Connection
+// Diagnostic test for Gemini API Connection with detailed error reporting
 export const testGeminiConnection = async (apiKey?: string | null): Promise<{ success: boolean; message: string }> => {
   const geminiKey =
     apiKey ||
@@ -40,21 +40,24 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
     process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
     process.env.GEMINI_API_KEY;
 
-  if (!geminiKey) {
+  if (!geminiKey || !geminiKey.trim()) {
     return { success: false, message: "Gemini API Key가 입력되지 않았습니다. 설정 탭의 Gemini API Key에 키를 입력하고 [저장]을 눌러주세요." };
   }
 
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const cleanKey = geminiKey.trim();
+  const models = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-pro"];
+  let lastError = "";
+
   for (const model of models) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: "테스트 인사 한 줄" }] }],
-            generationConfig: { maxOutputTokens: 30 }
+            contents: [{ parts: [{ text: "Hello" }] }],
+            generationConfig: { maxOutputTokens: 15 }
           })
         }
       );
@@ -63,15 +66,20 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
         const data = await response.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) {
-          return { success: true, message: `✅ Gemini AI 실시간 연결 완료! (${model} 모델 실시간 작동 중)` };
+          return { success: true, message: `✅ Gemini AI 실시간 연결 성공! (${model} 모델 반응 확인)` };
         }
+      } else {
+        const errJson = await response.json().catch(() => null);
+        const errMsg = errJson?.error?.message || response.statusText;
+        lastError = `[${response.status}] ${errMsg}`;
+        console.warn(`Gemini model ${model} error:`, lastError);
       }
-    } catch (e) {
-      console.warn(`Model ${model} test failed:`, e);
+    } catch (e: any) {
+      lastError = e?.message || "네트워크 오류";
     }
   }
 
-  return { success: false, message: "❌ Gemini API Key가 유효하지 않거나 실패했습니다. Google AI Studio에서 키를 재발급 받아 입력해 주세요." };
+  return { success: false, message: `❌ Gemini API 호출 실패: ${lastError}` };
 };
 
 // Generate AI Reason via Gemini API or Fallback Templates
@@ -81,11 +89,13 @@ export const generateAIReason = async (
   persona: AIPersona = 'emotional',
   apiKey?: string | null
 ): Promise<string> => {
-  const geminiKey =
+  const rawKey =
     apiKey ||
     (typeof window !== 'undefined' ? localStorage.getItem('momentune_gemini_key') : null) ||
     process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
     process.env.GEMINI_API_KEY;
+
+  const geminiKey = rawKey ? rawKey.trim() : null;
 
   const contextTags = [
     context.movement && `이동: ${context.movement}`,
@@ -137,13 +147,13 @@ export const generateAIReason = async (
 4. 마크다운 기호(예: **, ##)는 절대 사용하지 마세요. 완성된 본문 문구만 바로 출력하세요.
 `;
 
-  // Models to try in sequence
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  // Official Gemini API endpoints to try in sequence
+  const models = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-pro"];
 
   for (const model of models) {
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(geminiKey)}`,
         {
           method: 'POST',
           headers: {
