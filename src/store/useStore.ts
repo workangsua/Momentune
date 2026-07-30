@@ -71,6 +71,8 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     // Insert into Supabase PostgreSQL DB if configured
     insertCardToSupabase(card);
+    // Push update to global cloud sync API
+    get().syncWithCloud();
   },
 
   deleteCard: (id, isHistory) => {
@@ -89,6 +91,8 @@ export const useStore = create<StoreState>((set, get) => ({
     }
     // Delete from Supabase PostgreSQL DB if configured
     deleteCardFromSupabase(id);
+    // Push update to global cloud sync API
+    get().syncWithCloud();
   },
 
   setSpotifyClientId: (clientId) => {
@@ -153,29 +157,54 @@ export const useStore = create<StoreState>((set, get) => ({
   syncWithCloud: async () => {
     set({ isSyncing: true });
     try {
+      let fetchedCards: MusicCard[] = [];
+
+      // 1. Try fetching from Supabase first if configured
       const supabaseCards = await fetchCardsFromSupabase();
       if (supabaseCards && supabaseCards.length > 0) {
-        const todayKey = getLocalDateKey();
-        const todayCards: MusicCard[] = [];
-        const historyCards: MusicCard[] = [];
-
-        supabaseCards.forEach((card: MusicCard) => {
-          if (card.dateKey === todayKey) {
-            todayCards.push(card);
-          } else {
-            historyCards.push(card);
-          }
-        });
-
-        set({ todayCards, historyCards });
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('momentune_today_cards', JSON.stringify(todayCards));
-          localStorage.setItem('momentune_history_cards', JSON.stringify(historyCards));
-        }
+        fetchedCards = supabaseCards;
       }
+
+      // 2. Fetch from built-in global serverless API (/api/sync)
+      const res = await fetch('/api/sync', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        const apiCards = [...(data.todayCards || []), ...(data.historyCards || [])];
+        fetchedCards = [...fetchedCards, ...apiCards];
+      }
+
+      const todayKey = getLocalDateKey();
+      const localToday = get().todayCards;
+      const localHistory = get().historyCards;
+
+      // Merge local + fetched cards by card ID
+      const cardMap = new Map<string, MusicCard>();
+      [...localToday, ...localHistory, ...fetchedCards].forEach((c) => {
+        if (c && c.id) cardMap.set(c.id, c);
+      });
+
+      const allMerged = Array.from(cardMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      const todayCards = allMerged.filter((c) => c.dateKey === todayKey);
+      const historyCards = allMerged.filter((c) => c.dateKey !== todayKey);
+
+      set({ todayCards, historyCards });
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('momentune_today_cards', JSON.stringify(todayCards));
+        localStorage.setItem('momentune_history_cards', JSON.stringify(historyCards));
+      }
+
+      // 3. Push merged cards back to serverless cloud API
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ todayCards, historyCards }),
+      });
     } catch (err) {
-      console.warn("Supabase sync warning:", err);
+      console.warn("Cloud sync warning:", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -186,6 +215,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.removeItem('momentune_history_cards');
     }
+    get().syncWithCloud();
   },
 
   archiveOldCards: () => {
@@ -252,7 +282,7 @@ export const useStore = create<StoreState>((set, get) => ({
       // Run automatic date archiving
       get().archiveOldCards();
 
-      // Trigger Supabase sync if configured
+      // Trigger automatic cloud sync
       get().syncWithCloud();
     } catch (e) {
       console.error("Hydration error:", e);

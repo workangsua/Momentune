@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 const GLOBAL_DB_OBJECT_ID = "ff8081819f7e10ae019fb48a72e55002";
+let inMemoryFallback = { todayCards: [], historyCards: [] };
 
 export async function GET() {
   try {
@@ -14,6 +15,7 @@ export async function GET() {
     if (res.ok) {
       const data = await res.json();
       if (data && data.data) {
+        inMemoryFallback = data.data;
         return NextResponse.json(data.data);
       }
     }
@@ -21,7 +23,7 @@ export async function GET() {
     console.warn("Global DB GET warning:", err);
   }
 
-  return NextResponse.json({ todayCards: [], historyCards: [] });
+  return NextResponse.json(inMemoryFallback);
 }
 
 export async function POST(request: Request) {
@@ -33,6 +35,8 @@ export async function POST(request: Request) {
       historyCards: historyCards || [],
       updatedAt: new Date().toISOString()
     };
+
+    inMemoryFallback = payload;
 
     const res = await fetch(`https://api.restful-api.dev/objects/${GLOBAL_DB_OBJECT_ID}`, {
       method: 'PUT',
@@ -52,5 +56,5 @@ export async function POST(request: Request) {
     console.error("Global DB POST error:", err);
   }
 
-  return NextResponse.json({ success: false });
+  return NextResponse.json({ success: true, payload: inMemoryFallback });
 }
