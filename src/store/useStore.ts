@@ -11,6 +11,7 @@ interface StoreState {
   spotifyUser: string | null;
   geminiKey: string;
   aiPersona: AIPersona;
+  settingsPasscode: string | null;
   isHydrated: boolean;
   
   // Actions
@@ -21,6 +22,7 @@ interface StoreState {
   setSpotifyToken: (token: string | null, refreshToken: string | null, user: string | null) => void;
   setGeminiKey: (key: string) => void;
   setAiPersona: (persona: AIPersona) => void;
+  setSettingsPasscode: (passcode: string | null) => void;
   clearHistory: () => void;
   
   // Archive Logic
@@ -47,6 +49,7 @@ export const useStore = create<StoreState>((set, get) => ({
   spotifyUser: null,
   geminiKey: '',
   aiPersona: 'emotional',
+  settingsPasscode: null,
   isHydrated: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
@@ -110,6 +113,14 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
+  setSettingsPasscode: (passcode) => {
+    set({ settingsPasscode: passcode });
+    if (typeof window !== 'undefined') {
+      if (passcode) localStorage.setItem('momentune_settings_passcode', passcode);
+      else localStorage.removeItem('momentune_settings_passcode');
+    }
+  },
+
   clearHistory: () => {
     set({ historyCards: [] });
     if (typeof window !== 'undefined') {
@@ -163,6 +174,7 @@ export const useStore = create<StoreState>((set, get) => ({
       const spotifyUser = localStorage.getItem('momentune_spotify_user');
       const geminiKey = localStorage.getItem('momentune_gemini_key') || '';
       const aiPersona = (localStorage.getItem('momentune_ai_persona') as AIPersona) || 'emotional';
+      const settingsPasscode = localStorage.getItem('momentune_settings_passcode') || null;
 
       const todayCards: MusicCard[] = todayCardsRaw ? JSON.parse(todayCardsRaw) : [];
       const historyCards: MusicCard[] = historyCardsRaw ? JSON.parse(historyCardsRaw) : [];
@@ -176,6 +188,7 @@ export const useStore = create<StoreState>((set, get) => ({
         spotifyUser,
         geminiKey,
         aiPersona,
+        settingsPasscode,
         isHydrated: true
       });
 
