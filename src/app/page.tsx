@@ -494,7 +494,7 @@ export default function Home() {
                   <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
                       <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">가장 최근 발급 카드가 중앙에 배치됩니다. 좌우로 스와이프해 보세요.</p>
+                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드 양옆 버튼이나 엿보이는 카드를 클릭해 이동하세요.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
@@ -504,8 +504,32 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* 3D Swipe Stack Container */}
+                  {/* 3D Swipe Stack Container with Floating Left/Right Side Buttons */}
                   <div className="relative h-[530px] w-full flex items-center justify-center overflow-visible mt-4">
+                    {/* Left Navigation Chevron Button (Floating on Left Side of Active Card) */}
+                    {carouselCards.length > 1 && (
+                      <button
+                        onClick={() => activeIndex > 0 && setActiveIndex(activeIndex - 1)}
+                        disabled={activeIndex === 0}
+                        className="absolute left-[-16px] top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 border border-white/20 text-white shadow-2xl backdrop-blur-xl hover:bg-blue-600 hover:border-blue-400 hover:scale-110 disabled:opacity-20 disabled:scale-100 transition-all duration-300"
+                        title="이전 카드"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </button>
+                    )}
+
+                    {/* Right Navigation Chevron Button (Floating on Right Side of Active Card) */}
+                    {carouselCards.length > 1 && (
+                      <button
+                        onClick={() => activeIndex < carouselCards.length - 1 && setActiveIndex(activeIndex + 1)}
+                        disabled={activeIndex === carouselCards.length - 1}
+                        className="absolute right-[-16px] top-1/2 -translate-y-1/2 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 border border-white/20 text-white shadow-2xl backdrop-blur-xl hover:bg-blue-600 hover:border-blue-400 hover:scale-110 disabled:opacity-20 disabled:scale-100 transition-all duration-300"
+                        title="다음 카드"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
+                    )}
+
                     <AnimatePresence initial={false}>
                       {carouselCards.map((card, idx) => {
                         const offset = idx - activeIndex;
@@ -518,14 +542,14 @@ export default function Home() {
                           <motion.div
                             key={card.id}
                             style={{
-                              pointerEvents: isActive ? "auto" : "none"
+                              pointerEvents: "auto"
                             }}
                             animate={{
                               x: offset * 115, // horizontal spacing offset
                               scale: isActive ? 1 : 0.86,
                               rotate: offset * 3, // slightly tilt neighboring cards
                               zIndex: 10 - Math.abs(offset),
-                              opacity: isActive ? 1 : 0.45,
+                              opacity: isActive ? 1 : 0.5,
                             }}
                             transition={{
                               type: "spring",
@@ -544,7 +568,13 @@ export default function Home() {
                             }}
                             onMouseEnter={() => isActive && handlePlayPreview(card)}
                             onMouseLeave={() => handleStopPreview()}
-                            onClick={() => isActive && handlePlayPreview(card)}
+                            onClick={() => {
+                              if (isActive) {
+                                handlePlayPreview(card);
+                              } else {
+                                setActiveIndex(idx);
+                              }
+                            }}
                             className="absolute w-full max-w-[310px] overflow-visible cursor-pointer"
                           >
                             {/* Protruding Blue Tab Layered BEHIND Main Card */}
@@ -638,39 +668,20 @@ export default function Home() {
                     </AnimatePresence>
                   </div>
 
-                  {/* Navigation Helper Buttons and Indicators */}
+                  {/* Clean Page Counter & Swipe Dots at Bottom */}
                   {carouselCards.length > 1 && (
-                    <div className="flex flex-col items-center gap-3 mt-4">
-                      <div className="flex items-center gap-8">
-                        <button
-                          onClick={() => activeIndex > 0 && setActiveIndex(activeIndex - 1)}
-                          disabled={activeIndex === 0}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-355 hover:text-white disabled:opacity-30 transition"
-                        >
-                          <ChevronLeft className="h-4.5 w-4.5" />
-                        </button>
-                        
-                        <span className="text-xs font-bold font-mono text-zinc-400 tracking-wider">
-                          {activeIndex + 1} <span className="text-zinc-650">/</span> {carouselCards.length}
-                        </span>
+                    <div className="flex flex-col items-center gap-2.5 mt-5">
+                      <span className="text-xs font-black font-mono text-zinc-300 tracking-widest bg-white/5 border border-white/10 px-3 py-1 rounded-full backdrop-blur-md shadow-sm">
+                        {activeIndex + 1} <span className="text-blue-400">/</span> {carouselCards.length}
+                      </span>
 
-                        <button
-                          onClick={() => activeIndex < carouselCards.length - 1 && setActiveIndex(activeIndex + 1)}
-                          disabled={activeIndex === carouselCards.length - 1}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-355 hover:text-white disabled:opacity-30 transition"
-                        >
-                          <ChevronRight className="h-4.5 w-4.5" />
-                        </button>
-                      </div>
-
-                      {/* Swipe Dots */}
                       <div className="flex justify-center gap-1.5">
                         {carouselCards.map((_, idx) => (
                           <button
                             key={idx}
                             onClick={() => setActiveIndex(idx)}
                             className={`h-1.5 rounded-full transition-all duration-350 ${
-                              activeIndex === idx ? "w-6 bg-blue-500" : "w-1.5 bg-zinc-700/60"
+                              activeIndex === idx ? "w-6 bg-blue-500 shadow-sm shadow-blue-500/50" : "w-1.5 bg-zinc-700/60 hover:bg-zinc-500"
                             }`}
                           />
                         ))}
