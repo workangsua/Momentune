@@ -251,10 +251,10 @@ export default function Home() {
 
   if (!isHydrated) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#060402] text-zinc-400">
+      <div className="flex h-screen w-screen items-center justify-center bg-[#f8fafc] text-zinc-500">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-          <p className="text-sm font-semibold tracking-wide text-zinc-450">모멘튠 조율 중...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-sm font-semibold tracking-wide">모멘튠 조율 중...</p>
         </div>
       </div>
     );
@@ -262,10 +262,10 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col items-center pb-32 pt-10 relative">
-      {/* Premium Ambient Glowing Lights (Reference Vibe) */}
+      {/* Premium Ambient Blue Glowing Lights (White reference mode) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[-25%] left-[-25%] w-[80vw] h-[80vw] rounded-full bg-amber-500/8 blur-[130px]" />
-        <div className="absolute bottom-[-25%] right-[-25%] w-[80vw] h-[80vw] rounded-full bg-orange-600/8 blur-[130px]" />
+        <div className="absolute top-[-25%] left-[-25%] w-[80vw] h-[80vw] rounded-full bg-blue-500/5 blur-[130px]" />
+        <div className="absolute bottom-[-25%] right-[-25%] w-[80vw] h-[80vw] rounded-full bg-sky-500/5 blur-[130px]" />
       </div>
 
       {/* Header Logo */}
@@ -275,7 +275,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-baseline"
         >
-          <h1 className="text-3xl font-black tracking-widest text-zinc-100 font-sans">MOMENTUNE</h1>
+          <h1 className="text-3xl font-black tracking-widest text-zinc-800 font-sans">MOMENTUNE</h1>
         </motion.div>
       </header>
 
@@ -295,20 +295,20 @@ export default function Home() {
                 // Welcome screen if empty
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-20 px-4">
                   <div className="relative mb-6">
-                    <div className="absolute -inset-1 rounded-full bg-amber-500/20 blur-xl"></div>
-                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-md">
-                      <Music className="h-8 w-8 text-amber-400" />
+                    <div className="absolute -inset-1 rounded-full bg-blue-500/10 blur-xl"></div>
+                    <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-zinc-200 bg-white shadow-sm">
+                      <Music className="h-8 w-8 text-blue-650" />
                     </div>
                   </div>
-                  <h2 className="text-lg font-extrabold text-zinc-200">오늘의 음악 티켓</h2>
-                  <p className="text-xs text-zinc-400 mt-2.5 max-w-xs leading-relaxed font-medium">
+                  <h2 className="text-lg font-extrabold text-zinc-800">오늘의 음악 티켓</h2>
+                  <p className="text-xs text-zinc-500 mt-2.5 max-w-xs leading-relaxed font-medium">
                     내 상황(이동, 활동, 날씨, 기분)을 조율해 보세요.<br />
                     AI가 오늘 들어야 하는 감성 음악 카드를 발급합니다.
                   </p>
                   
                   <button
                     onClick={() => setIsSelectorOpen(true)}
-                    className="mt-8 flex items-center gap-2 rounded-full bg-amber-600 px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-amber-600/25 hover:bg-amber-700 transition duration-300"
+                    className="mt-8 flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-xs font-bold text-white shadow-md shadow-blue-600/15 hover:bg-blue-700 transition duration-300"
                   >
                     <Plus className="h-4 w-4" />
                     내 상태 기록하고 음악 카드 발급
@@ -318,14 +318,14 @@ export default function Home() {
                 // Timeline of today's cards
                 <div className="flex flex-col gap-6">
                   {/* Summary Bar */}
-                  <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
+                  <div className="flex justify-between items-center bg-white/60 border border-white/50 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
-                      <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">자정이 지나면 자동으로 HISTORY 보관소로 이동합니다.</p>
+                      <h3 className="text-xs font-bold text-zinc-800">오늘 발급된 음악 티켓</h3>
+                      <p className="text-[10px] text-zinc-500 mt-0.5 font-medium">자정이 지나면 자동으로 HISTORY 보관소로 이동합니다.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-600 text-white shadow hover:bg-amber-700 transition shadow-amber-600/10"
+                      className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition shadow-blue-600/10"
                     >
                       <Plus className="h-4.5 w-4.5" />
                     </button>
@@ -340,17 +340,17 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         className="relative group"
                       >
-                        {/* Premium Ticket Card Body */}
-                        <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                        {/* Premium Ticket Card Body (Frosted White Glassmorphism) */}
+                        <div className="bg-white/60 border border-white/50 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-xl backdrop-blur-xl">
                           
-                          {/* Inner soft-canvas visual block */}
-                          <div className="aspect-square w-full rounded-2xl bg-[#eae3cb]/10 p-5 flex flex-col justify-between relative border border-white/5 overflow-hidden">
-                            {/* Top part of canvas: context chips */}
+                          {/* Inner visual block (Soft Blue-Tinted Glass) */}
+                          <div className="aspect-square w-full rounded-2xl bg-blue-500/5 p-5 flex flex-col justify-between relative border border-blue-500/10 overflow-hidden">
+                            {/* Top part of visual block: context chips */}
                             <div className="flex flex-wrap gap-1">
                               {Object.values(card.context).map((tag, tIdx) => tag && (
                                 <span
                                   key={tIdx}
-                                  className="inline-block rounded-full bg-white/10 border border-white/5 px-2.5 py-0.5 text-[9px] text-[#e3d7b4] font-bold"
+                                  className="inline-block rounded-full bg-blue-500/10 border border-blue-500/10 px-2.5 py-0.5 text-[9px] text-blue-600 font-bold"
                                 >
                                   {tag}
                                 </span>
@@ -359,7 +359,7 @@ export default function Home() {
 
                             {/* Center of canvas: Album cover art with turntable detail */}
                             <div className="relative flex flex-col items-center justify-center my-auto">
-                              <div className="relative h-28 w-28 flex-shrink-0 shadow-xl rounded-full overflow-hidden record-spin border border-white/10">
+                              <div className="relative h-28 w-28 flex-shrink-0 shadow-xl rounded-full overflow-hidden record-spin border border-white/20">
                                 <img
                                   src={card.track.albumCover}
                                   alt="Cover"
@@ -367,19 +367,19 @@ export default function Home() {
                                 />
                                 {/* Vinyl center cutout */}
                                 <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
-                                  <div className="h-6 w-6 rounded-full bg-[#1c1c1c] border border-white/15 flex items-center justify-center">
+                                  <div className="h-6 w-6 rounded-full bg-[#1c1c1c] border-2 border-white/10 flex items-center justify-center">
                                     <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
                                   </div>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Bottom part of canvas: meta indicators */}
-                            <div className="flex justify-between items-end border-t border-white/10 pt-2.5 mt-2">
-                              <span className="text-[9px] text-[#c2b793] font-bold font-mono uppercase tracking-wider">
+                            {/* Bottom part: meta indicators */}
+                            <div className="flex justify-between items-end border-t border-blue-500/10 pt-2.5 mt-2">
+                              <span className="text-[9px] text-blue-500/70 font-bold font-mono uppercase tracking-wider">
                                 MOMENTUNE STAMP
                               </span>
-                              <span className="text-[9px] text-[#c2b793] font-bold font-mono">
+                              <span className="text-[9px] text-blue-500/70 font-bold font-mono">
                                 {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                               </span>
                             </div>
@@ -389,12 +389,12 @@ export default function Home() {
                           <div className="mt-5 px-1">
                             <div className="flex justify-between items-start gap-4">
                               <div className="min-w-0 flex-1">
-                                <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                <p className="text-xs text-zinc-400 truncate mt-0.5 font-semibold">{card.track.artist}</p>
+                                <h4 className="text-base font-extrabold text-zinc-900 truncate tracking-tight">{card.track.title}</h4>
+                                <p className="text-xs text-zinc-500 truncate mt-0.5 font-semibold">{card.track.artist}</p>
                               </div>
                               <button
                                 onClick={() => deleteCard(card.id, false)}
-                                className="text-zinc-500 hover:text-red-400 transition p-1.5 rounded-full hover:bg-white/5"
+                                className="text-zinc-400 hover:text-red-500 transition p-1.5 rounded-full hover:bg-zinc-100"
                                 title="카드 삭제"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -402,8 +402,8 @@ export default function Home() {
                             </div>
 
                             {/* AI Curated Reason */}
-                            <div className="mt-4 pt-3.5 border-t border-white/5">
-                              <p className="text-xs text-zinc-350 leading-relaxed font-semibold italic whitespace-pre-line">
+                            <div className="mt-4 pt-3.5 border-t border-zinc-200/50">
+                              <p className="text-xs text-zinc-700 leading-relaxed font-semibold italic whitespace-pre-line">
                                 "{card.aiReason}"
                               </p>
                             </div>
@@ -415,11 +415,11 @@ export default function Home() {
                           href={card.track.spotifyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-755 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                          className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-md cursor-pointer group-hover:translate-y-0.5 transition duration-300"
                         >
-                          {/* Cutout punch notches matching the dark theme page bg */}
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#0a0603] border-r border-white/5"></div>
-                          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#0a0603] border-l border-white/5"></div>
+                          {/* Cutout punch notches matching the light blue background */}
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#f4f6fa] border-r border-zinc-200/50"></div>
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#f4f6fa] border-l border-zinc-200/50"></div>
 
                           <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
                             <Music className="h-3.5 w-3.5 animate-bounce" />
@@ -446,9 +446,9 @@ export default function Home() {
             >
               {historyCards.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center py-24 px-4">
-                  <Archive className="h-10 w-10 text-zinc-550 mb-4" />
-                  <h2 className="text-base font-bold text-zinc-300">보관된 티켓이 없습니다</h2>
-                  <p className="text-xs text-zinc-550 mt-1 max-w-xs leading-relaxed font-medium">
+                  <Archive className="h-10 w-10 text-zinc-400 mb-4" />
+                  <h2 className="text-base font-bold text-zinc-800">보관된 티켓이 없습니다</h2>
+                  <p className="text-xs text-zinc-500 mt-1 max-w-xs leading-relaxed font-medium">
                     오늘이 지나 자정이 지나면,<br />
                     작성된 티켓들이 자동으로 보관함에 보관됩니다.
                   </p>
@@ -456,15 +456,15 @@ export default function Home() {
               ) : (
                 <div className="flex flex-col gap-6">
                   {/* Vibe filter pills */}
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
-                    <h3 className="text-[10px] font-bold text-zinc-455 uppercase tracking-widest mb-3">태그 필터</h3>
+                  <div className="bg-white/60 border border-white/50 rounded-2xl p-4 shadow-sm backdrop-blur-md">
+                    <h3 className="text-[10px] font-bold text-zinc-450 uppercase tracking-widest mb-3">태그 필터</h3>
                     <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
                       <button
                         onClick={() => setHistoryFilterTag("")}
                         className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
                           !historyFilterTag
-                            ? "bg-amber-600 text-white shadow-sm"
-                            : "bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-zinc-100 text-zinc-500 border border-zinc-200/60 hover:bg-zinc-200"
                         }`}
                       >
                         전체
@@ -475,8 +475,8 @@ export default function Home() {
                           onClick={() => setHistoryFilterTag(tag)}
                           className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
                             historyFilterTag === tag
-                              ? "bg-amber-600 text-white shadow-sm"
-                              : "bg-white/5 text-zinc-400 border border-white/10 hover:bg-white/10"
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "bg-zinc-100 text-zinc-500 border border-zinc-200/60 hover:bg-zinc-200"
                           }`}
                         >
                           {tag}
@@ -489,24 +489,24 @@ export default function Home() {
                   <div className="flex flex-col gap-10">
                     {Object.entries(getGroupedHistory()).map(([date, cards]) => (
                       <div key={date} className="flex flex-col gap-5">
-                        <div className="flex items-center gap-2 border-b border-white/10 pb-2 ml-1">
-                          <Calendar className="h-3.5 w-3.5 text-amber-500" />
-                          <span className="text-xs font-black tracking-wider text-zinc-300 font-mono">{date}</span>
-                          <span className="text-[10px] text-zinc-500 font-bold">({cards.length})</span>
+                        <div className="flex items-center gap-2 border-b border-zinc-250 pb-2 ml-1">
+                          <Calendar className="h-3.5 w-3.5 text-blue-600" />
+                          <span className="text-xs font-black tracking-wider text-zinc-800 font-mono">{date}</span>
+                          <span className="text-[10px] text-zinc-400 font-bold">({cards.length})</span>
                         </div>
 
                         <div className="flex flex-col gap-8">
                           {cards.map((card) => (
                             <div key={card.id} className="relative group">
-                              <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
+                              <div className="bg-white/60 border border-white/50 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-xl backdrop-blur-xl">
                                 
                                 {/* Inner visual */}
-                                <div className="aspect-square w-full rounded-2xl bg-[#eae3cb]/10 p-5 flex flex-col justify-between relative border border-white/5 overflow-hidden">
+                                <div className="aspect-square w-full rounded-2xl bg-blue-500/5 p-5 flex flex-col justify-between relative border border-blue-500/10 overflow-hidden">
                                   <div className="flex flex-wrap gap-1">
                                     {Object.values(card.context).map((tag, tIdx) => tag && (
                                       <span
                                         key={tIdx}
-                                        className="inline-block rounded-full bg-white/10 border border-white/5 px-2.5 py-0.5 text-[9px] text-[#e3d7b4] font-bold"
+                                        className="inline-block rounded-full bg-blue-500/10 border border-blue-500/10 px-2.5 py-0.5 text-[9px] text-blue-600 font-bold"
                                       >
                                         {tag}
                                       </span>
@@ -514,7 +514,7 @@ export default function Home() {
                                   </div>
 
                                   <div className="relative flex flex-col items-center justify-center my-auto">
-                                    <div className="relative h-24 w-24 flex-shrink-0 shadow-lg rounded-full overflow-hidden record-spin border border-white/10">
+                                    <div className="relative h-24 w-24 flex-shrink-0 shadow-lg rounded-full overflow-hidden record-spin border border-white/20">
                                       <img
                                         src={card.track.albumCover}
                                         alt="Cover"
@@ -528,11 +528,11 @@ export default function Home() {
                                     </div>
                                   </div>
 
-                                  <div className="flex justify-between items-end border-t border-white/10 pt-2.5 mt-2">
-                                    <span className="text-[9px] text-[#c2b793] font-bold font-mono uppercase tracking-wider">
+                                  <div className="flex justify-between items-end border-t border-blue-500/10 pt-2.5 mt-2">
+                                    <span className="text-[9px] text-blue-500/70 font-bold font-mono uppercase tracking-wider">
                                       ARCHIVE STAMP
                                     </span>
-                                    <span className="text-[9px] text-[#c2b793] font-bold font-mono">
+                                    <span className="text-[9px] text-blue-500/70 font-bold font-mono">
                                       {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </div>
@@ -541,20 +541,20 @@ export default function Home() {
                                 <div className="mt-5 px-1">
                                   <div className="flex justify-between items-start gap-4">
                                     <div className="min-w-0 flex-1">
-                                      <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-semibold">{card.track.artist}</p>
+                                      <h4 className="text-base font-extrabold text-zinc-900 truncate tracking-tight">{card.track.title}</h4>
+                                      <p className="text-xs text-zinc-500 truncate mt-0.5 font-semibold">{card.track.artist}</p>
                                     </div>
                                     <button
                                       onClick={() => deleteCard(card.id, true)}
-                                      className="text-zinc-550 hover:text-red-400 transition p-1 rounded-full hover:bg-white/5"
+                                      className="text-zinc-400 hover:text-red-500 transition p-1 rounded-full hover:bg-zinc-105"
                                       title="카드 삭제"
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </button>
                                   </div>
 
-                                  <div className="mt-4 pt-3.5 border-t border-white/5">
-                                    <p className="text-xs text-zinc-350 leading-relaxed font-semibold italic whitespace-pre-line">
+                                  <div className="mt-4 pt-3.5 border-t border-zinc-200/50">
+                                    <p className="text-xs text-zinc-700 leading-relaxed font-semibold italic whitespace-pre-line">
                                       "{card.aiReason}"
                                     </p>
                                   </div>
@@ -565,10 +565,10 @@ export default function Home() {
                                 href={card.track.spotifyUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-lg cursor-pointer group-hover:translate-y-0.5 transition duration-300"
+                                className="relative -mt-4 mx-6 h-12 rounded-b-2xl bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 flex items-center justify-center border-t border-dashed border-white/20 shadow-md cursor-pointer group-hover:translate-y-0.5 transition duration-300"
                               >
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#0a0603] border-r border-white/5"></div>
-                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#0a0603] border-l border-white/5"></div>
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#f4f6fa] border-r border-zinc-200/50"></div>
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#f4f6fa] border-l border-zinc-200/50"></div>
 
                                 <div className="flex items-center gap-2 text-white font-black text-[10px] tracking-widest">
                                   <Music className="h-3.5 w-3.5 animate-bounce" />
@@ -599,12 +599,12 @@ export default function Home() {
               {/* LOCK STATE PROTECTION PANEL */}
               {!settingsPasscode ? (
                 // Setup Passcode Screen (First use)
-                <div className="bg-white/5 border border-white/10 rounded-3xl p-6 shadow-md text-center py-10 backdrop-blur-md">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/5 text-amber-500 mb-4">
+                <div className="bg-white/80 border border-zinc-200/60 rounded-3xl p-6 shadow-md text-center py-10 backdrop-blur-md">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 mb-4">
                     <Lock className="h-6 w-6" />
                   </div>
-                  <h3 className="text-base font-bold text-zinc-200">개인정보 설정 잠금 비밀번호 등록</h3>
-                  <p className="text-xs text-zinc-450 mt-2 leading-relaxed px-4">
+                  <h3 className="text-base font-bold text-zinc-900">개인정보 설정 잠금 비밀번호 등록</h3>
+                  <p className="text-xs text-zinc-500 mt-2 leading-relaxed px-4">
                     설정에 들어갈 수 있는 비밀번호를 생성해 주세요.<br />
                     등록한 스포티파이 ID와 Gemini API Key 정보를 보호합니다.
                   </p>
@@ -614,11 +614,11 @@ export default function Home() {
                       value={newPasscode}
                       onChange={(e) => setNewPasscode(e.target.value)}
                       placeholder="비밀번호 설정 (예: 4자리 숫자)"
-                      className="w-full text-center rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-amber-500/50 text-white"
+                      className="w-full text-center rounded-xl bg-zinc-50 border border-zinc-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-zinc-800"
                     />
                     <button
                       onClick={handleCreatePasscode}
-                      className="w-full rounded-xl bg-amber-600 py-3 text-xs font-bold text-white shadow hover:bg-amber-700 transition"
+                      className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow hover:bg-blue-700 transition"
                     >
                       비밀번호 등록 및 설정 열기
                     </button>
@@ -626,12 +626,12 @@ export default function Home() {
                 </div>
               ) : !isSettingsUnlocked ? (
                 // Unlock Screen
-                <div className="bg-white/5 border border-white/10 rounded-3xl p-6 shadow-md text-center py-12 backdrop-blur-md">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/5 text-zinc-400 mb-4">
+                <div className="bg-white/80 border border-zinc-200/60 rounded-3xl p-6 shadow-md text-center py-12 backdrop-blur-md">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-50 text-zinc-400 mb-4">
                     <Lock className="h-6 w-6" />
                   </div>
-                  <h3 className="text-base font-bold text-zinc-200">설정 탭 보호</h3>
-                  <p className="text-xs text-zinc-450 mt-1">개인정보 보호를 위해 비밀번호를 입력해 주세요.</p>
+                  <h3 className="text-base font-bold text-zinc-900">설정 탭 보호</h3>
+                  <p className="text-xs text-zinc-550 mt-1">개인정보 보호를 위해 비밀번호를 입력해 주세요.</p>
                   <div className="mt-6 flex flex-col gap-3 max-w-xs mx-auto">
                     <input
                       type="password"
@@ -639,7 +639,7 @@ export default function Home() {
                       onChange={(e) => setInputPasscode(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleUnlockSettings()}
                       placeholder="비밀번호 입력"
-                      className="w-full text-center rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-sm focus:outline-none focus:border-amber-500/50 text-white"
+                      className="w-full text-center rounded-xl bg-zinc-50 border border-zinc-200 px-4 py-3 text-sm focus:outline-none focus:border-blue-500 text-zinc-800"
                     />
                     <button
                       onClick={handleUnlockSettings}
@@ -653,26 +653,26 @@ export default function Home() {
                 // Unlocked Settings content
                 <>
                   {/* Unlock Notice Banner */}
-                  <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-2 shadow-inner backdrop-blur-md">
-                    <span className="text-[10px] text-zinc-300 font-bold flex items-center gap-1.5">
-                      <Unlock className="h-3.5 w-3.5 text-emerald-400" /> 개인정보 잠금 해제됨
+                  <div className="flex justify-between items-center bg-white/60 border border-zinc-200/60 rounded-2xl p-3.5 mb-2 shadow-inner backdrop-blur-md">
+                    <span className="text-[10px] text-zinc-600 font-bold flex items-center gap-1.5">
+                      <Unlock className="h-3.5 w-3.5 text-emerald-600" /> 개인정보 잠금 해제됨
                     </span>
                     <button
                       onClick={() => {
                         setIsSettingsUnlocked(false);
                         setInputPasscode("");
                       }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300 text-[10px] font-bold hover:bg-white/10 transition shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-zinc-700 text-[10px] font-bold hover:bg-zinc-50 transition shadow-sm"
                     >
                       다시 잠그기
                     </button>
                   </div>
 
                   {/* Spotify config panel */}
-                  <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
+                  <div className="bg-white/60 border border-white/50 rounded-3xl p-5 shadow-sm backdrop-blur-md">
                     <div className="flex items-center gap-2 mb-4">
-                      <Music className="h-5 w-5 text-emerald-400" />
-                      <h3 className="text-sm font-bold text-zinc-200">Spotify 계정 연동</h3>
+                      <Music className="h-5 w-5 text-emerald-500" />
+                      <h3 className="text-sm font-bold text-zinc-900">Spotify 계정 연동</h3>
                     </div>
 
                     <div className="flex flex-col gap-3">
@@ -685,25 +685,25 @@ export default function Home() {
                           value={tempClientId}
                           onChange={(e) => setTempClientId(e.target.value)}
                           placeholder="Spotify Developer Client ID 입력"
-                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-350 placeholder-zinc-550 focus:outline-none focus:border-amber-500/50 text-white"
+                          className="w-full rounded-xl bg-zinc-50 border border-zinc-200 px-3.5 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-blue-500 text-zinc-800"
                         />
                       </div>
 
                       {spotifyToken ? (
-                        <div className="bg-emerald-500/5 rounded-xl border border-emerald-500/10 p-3.5 mt-1 flex flex-col gap-2">
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3.5 mt-1 flex flex-col gap-2">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-zinc-450 font-semibold">연동 상태</span>
-                            <span className="text-emerald-400 flex items-center gap-1 font-bold">
+                            <span className="text-zinc-500 font-semibold">연동 상태</span>
+                            <span className="text-emerald-600 flex items-center gap-1 font-bold">
                               <Check className="h-3 w-3" /> 연동 완료
                             </span>
                           </div>
-                          <div className="text-xs flex items-center justify-between text-zinc-450">
+                          <div className="text-xs flex items-center justify-between text-zinc-500">
                             <span>사용자</span>
-                            <span className="text-zinc-200 font-bold">{spotifyUser || '알 수 없음'}</span>
+                            <span className="text-zinc-800 font-bold">{spotifyUser || '알 수 없음'}</span>
                           </div>
                           <button
                             onClick={() => setSpotifyToken(null, null, null)}
-                            className="w-full mt-2 rounded-lg bg-zinc-900 border border-zinc-800 py-2.5 text-[10px] font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition"
+                            className="w-full mt-2 rounded-lg bg-zinc-200 border border-zinc-300/60 py-2.5 text-[10px] font-bold text-zinc-650 hover:text-zinc-850 hover:bg-zinc-300 transition"
                           >
                             연동 해제
                           </button>
@@ -716,12 +716,12 @@ export default function Home() {
                               redirectToSpotifyAuth(tempClientId);
                             }}
                             disabled={!tempClientId}
-                            className="w-full rounded-xl bg-emerald-500 py-3 text-xs font-bold text-white shadow-sm shadow-emerald-500/10 hover:bg-emerald-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-xl bg-emerald-500 py-3 text-xs font-bold text-white shadow-sm shadow-emerald-500/10 hover:bg-emerald-650 transition disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Spotify 로그인 연동
                           </button>
                           <p className="text-[10px] text-zinc-500 leading-normal px-1">
-                            ※ 연동하지 않으면 미리 준비된 감성 음악 fallback 데이터베이스에서 추천 카드를 생성합니다. (Client ID는 Spotify Dashboard에 Redirect URI로 <code className="bg-black px-1 rounded text-zinc-400">{typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/'}</code>를 등록해야 연결됩니다.)
+                            ※ 연동하지 않으면 미리 준비된 감성 음악 fallback 데이터베이스에서 추천 카드를 생성합니다. (Client ID는 Spotify Dashboard에 Redirect URI로 <code className="bg-zinc-100 px-1 rounded text-zinc-650">{typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:3000/'}</code>를 등록해야 연결됩니다.)
                           </p>
                         </div>
                       )}
@@ -729,10 +729,10 @@ export default function Home() {
                   </div>
 
                   {/* Gemini AI config panel */}
-                  <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
+                  <div className="bg-white/60 border border-white/50 rounded-3xl p-5 shadow-sm backdrop-blur-md">
                     <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="h-5 w-5 text-indigo-400" />
-                      <h3 className="text-sm font-bold text-zinc-200">Gemini AI 설정</h3>
+                      <Sparkles className="h-5 w-5 text-blue-600" />
+                      <h3 className="text-sm font-bold text-zinc-900">Gemini AI 설정</h3>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -746,24 +746,24 @@ export default function Home() {
                             value={tempGeminiKey}
                             onChange={(e) => setTempGeminiKey(e.target.value)}
                             placeholder="Google Gemini API Key 입력"
-                            className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-850 placeholder-zinc-550 focus:outline-none focus:border-amber-500/50 text-white"
+                            className="flex-1 rounded-xl bg-zinc-50 border border-zinc-200 px-3.5 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-blue-500/50 text-zinc-800"
                           />
                           <button
                             onClick={() => {
                               setGeminiKey(tempGeminiKey);
                               alert("Gemini API 키가 저장되었습니다.");
                             }}
-                            className="rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white hover:bg-indigo-700 transition"
+                            className="rounded-xl bg-blue-650 px-4 text-xs font-bold text-white hover:bg-blue-750 transition shadow-sm shadow-blue-600/10"
                           >
                             저장
                           </button>
                         </div>
                         {geminiKey ? (
-                          <span className="inline-block mt-2 text-[10px] text-indigo-400 font-bold">
+                          <span className="inline-block mt-2 text-[10px] text-blue-600 font-bold">
                             ✓ API Key 활성화됨
                           </span>
                         ) : (
-                          <span className="inline-block mt-2 text-[10px] text-yellow-500 font-bold flex items-center gap-1">
+                          <span className="inline-block mt-2 text-[10px] text-yellow-600 font-bold flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" /> 키 미입력 상태 (테스트 데모 큐레이션 제공)
                           </span>
                         )}
@@ -786,12 +786,12 @@ export default function Home() {
                               onClick={() => setAiPersona(item.key as AIPersona)}
                               className={`rounded-xl border p-3 text-left transition ${
                                 aiPersona === item.key
-                                  ? "bg-amber-500/10 border-amber-500/50 text-amber-300"
-                                  : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                                  ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                                  : "bg-zinc-50 border-zinc-200 text-zinc-500 hover:bg-zinc-100"
                               }`}
                             >
                               <div className="text-xs font-bold">{item.label}</div>
-                              <div className="text-[10px] text-zinc-500 mt-1">{item.desc}</div>
+                              <div className="text-[10px] text-zinc-400 mt-1">{item.desc}</div>
                             </button>
                           ))}
                         </div>
@@ -800,7 +800,7 @@ export default function Home() {
                   </div>
 
                   {/* Passcode Reset / Data settings */}
-                  <div className="bg-white/5 border border-white/10 rounded-3xl p-5 shadow-lg backdrop-blur-md">
+                  <div className="bg-white/60 border border-white/50 rounded-3xl p-5 shadow-sm backdrop-blur-md">
                     <h3 className="text-xs font-bold text-zinc-450 mb-3">비밀번호 및 데이터 설정</h3>
                     <div className="flex flex-col gap-2">
                       <button
@@ -810,7 +810,7 @@ export default function Home() {
                             setIsSettingsUnlocked(false);
                           }
                         }}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3.5 text-xs font-bold text-zinc-300 hover:bg-white/10 transition"
+                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-3.5 text-xs font-bold text-zinc-650 hover:bg-zinc-50 transition"
                       >
                         설정 잠금 비밀번호 재설정 (Reset)
                       </button>
@@ -822,7 +822,7 @@ export default function Home() {
                           }
                         }}
                         disabled={historyCards.length === 0}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 py-3.5 text-xs font-bold text-red-400 hover:bg-red-500/10 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50/30 py-3.5 text-xs font-bold text-red-550 hover:bg-red-100 transition disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <RotateCcw className="h-3.5 w-3.5" />
                         기록 탭 보관소 완전히 비우기
@@ -836,13 +836,13 @@ export default function Home() {
         </AnimatePresence>
       </main>
 
-      {/* Floating Bottom Navigation Bar (Frosted glass reference styled) */}
+      {/* Floating Bottom Navigation Bar (Frosted white glass reference styled) */}
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-40">
-        <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-5 py-3.5 flex justify-around items-center shadow-2xl">
+        <div className="bg-white/70 border border-white/60 backdrop-blur-xl rounded-full px-5 py-3.5 flex justify-around items-center shadow-2xl">
           <button
             onClick={() => setActiveTab("today")}
             className={`flex flex-col items-center gap-1 transition ${
-              activeTab === "today" ? "text-amber-400" : "text-zinc-400 hover:text-white"
+              activeTab === "today" ? "text-blue-600" : "text-zinc-450 hover:text-zinc-700"
             }`}
           >
             <Compass className="h-5 w-5" />
@@ -852,7 +852,7 @@ export default function Home() {
           <button
             onClick={() => setActiveTab("history")}
             className={`flex flex-col items-center gap-1 transition ${
-              activeTab === "history" ? "text-amber-400" : "text-zinc-400 hover:text-white"
+              activeTab === "history" ? "text-blue-600" : "text-zinc-450 hover:text-zinc-700"
             }`}
           >
             <Archive className="h-5 w-5" />
@@ -862,7 +862,7 @@ export default function Home() {
           <button
             onClick={() => setActiveTab("settings")}
             className={`flex flex-col items-center gap-1 transition ${
-              activeTab === "settings" ? "text-amber-400" : "text-zinc-400 hover:text-white"
+              activeTab === "settings" ? "text-blue-600" : "text-zinc-450 hover:text-zinc-700"
             }`}
           >
             <SettingsIcon className="h-5 w-5" />
@@ -874,7 +874,7 @@ export default function Home() {
       {/* MODAL: Context Selector Step-by-Step */}
       <AnimatePresence>
         {isSelectorOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 backdrop-blur-xs">
             {/* Modal backdrop closer */}
             <div className="absolute inset-0" onClick={() => !isGenerating && setIsSelectorOpen(false)}></div>
 
@@ -883,31 +883,31 @@ export default function Home() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-md rounded-t-[32px] bg-[#0c0a08] border-t border-white/10 p-6 z-10 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="relative w-full max-w-md rounded-t-[32px] bg-white border-t border-zinc-200/80 p-6 z-10 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
               {/* Close handler */}
               {!isGenerating && (
                 <button
                   onClick={() => setIsSelectorOpen(false)}
-                  className="absolute right-5 top-5 h-8 w-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:text-white"
+                  className="absolute right-5 top-5 h-8 w-8 flex items-center justify-center rounded-full bg-zinc-100 border border-zinc-200 text-zinc-500 hover:text-zinc-800"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
 
               <div className="flex items-center gap-2 mb-6">
-                <Compass className="h-5 w-5 text-amber-500" />
-                <h3 className="text-base font-bold text-zinc-200">현재의 소리 기록하기</h3>
+                <Compass className="h-5 w-5 text-blue-600" />
+                <h3 className="text-base font-bold text-zinc-950">현재의 소리 기록하기</h3>
               </div>
 
               {isGenerating ? (
                 // Loading screen during generation
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="relative mb-6">
-                    <div className="absolute -inset-1 rounded-full bg-amber-500/10 blur-xl"></div>
-                    <Loader2 className="relative h-12 w-12 text-amber-500 animate-spin" />
+                    <div className="absolute -inset-1 rounded-full bg-blue-500/10 blur-xl"></div>
+                    <Loader2 className="relative h-12 w-12 text-blue-600 animate-spin" />
                   </div>
-                  <h4 className="text-sm font-bold text-zinc-200">음악 카드 제조 중...</h4>
+                  <h4 className="text-sm font-bold text-zinc-950">음악 카드 제조 중...</h4>
                   <p className="text-xs text-zinc-500 mt-2 tracking-wide font-medium">{generationStep}</p>
                 </div>
               ) : (
@@ -915,7 +915,7 @@ export default function Home() {
                 <div className="flex flex-col gap-5 pb-6">
                   {/* Category 1: Movement */}
                   <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">1. 어디로 가고 있나요? (이동)</span>
+                    <span className="block text-xs font-bold text-zinc-550 mb-2">1. 어디로 가고 있나요? (이동)</span>
                     <div className="flex flex-wrap gap-2">
                       {movementOptions.map((opt) => (
                         <button
@@ -923,8 +923,8 @@ export default function Home() {
                           onClick={() => setSelectedMovement(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
                             selectedMovement === opt
-                              ? "bg-amber-600 border-amber-600 text-white font-bold shadow-md shadow-amber-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
+                              : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:bg-zinc-150"
                           }`}
                         >
                           {opt}
@@ -935,7 +935,7 @@ export default function Home() {
 
                   {/* Category 2: Activity */}
                   <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">2. 무엇을 하고 있나요? (활동)</span>
+                    <span className="block text-xs font-bold text-zinc-555 mb-2">2. 무엇을 하고 있나요? (활동)</span>
                     <div className="flex flex-wrap gap-2">
                       {activityOptions.map((opt) => (
                         <button
@@ -943,8 +943,8 @@ export default function Home() {
                           onClick={() => setSelectedActivity(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
                             selectedActivity === opt
-                              ? "bg-amber-600 border-amber-600 text-white font-bold shadow-md shadow-amber-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
+                              : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:bg-zinc-150"
                           }`}
                         >
                           {opt}
@@ -955,7 +955,7 @@ export default function Home() {
 
                   {/* Category 3: Weather */}
                   <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">3. 바깥 날씨는 어떤가요? (날씨)</span>
+                    <span className="block text-xs font-bold text-zinc-555 mb-2">3. 바깥 날씨는 어떤가요? (날씨)</span>
                     <div className="flex flex-wrap gap-2">
                       {weatherOptions.map((opt) => (
                         <button
@@ -963,8 +963,8 @@ export default function Home() {
                           onClick={() => setSelectedWeather(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
                             selectedWeather === opt
-                              ? "bg-amber-600 border-amber-600 text-white font-bold shadow-md shadow-amber-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
+                              : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:bg-zinc-150"
                           }`}
                         >
                           {opt}
@@ -975,7 +975,7 @@ export default function Home() {
 
                   {/* Category 4: Mood */}
                   <div>
-                    <span className="block text-xs font-bold text-zinc-400 mb-2">4. 지금 마음은 어떤가요? (기분)</span>
+                    <span className="block text-xs font-bold text-zinc-555 mb-2">4. 지금 마음은 어떤가요? (기분)</span>
                     <div className="flex flex-wrap gap-2">
                       {moodOptions.map((opt) => (
                         <button
@@ -983,8 +983,8 @@ export default function Home() {
                           onClick={() => setSelectedMood(opt)}
                           className={`rounded-xl border px-3.5 py-2.5 text-xs transition font-semibold ${
                             selectedMood === opt
-                              ? "bg-amber-600 border-amber-600 text-white font-bold shadow-md shadow-amber-600/10"
-                              : "bg-white/5 border-white/5 text-zinc-400 hover:bg-white/10"
+                              ? "bg-blue-600 border-blue-600 text-white font-bold shadow-md shadow-blue-600/10"
+                              : "bg-zinc-50 border-zinc-200 text-zinc-650 hover:bg-zinc-150"
                           }`}
                         >
                           {opt}
@@ -997,7 +997,7 @@ export default function Home() {
                   <button
                     onClick={handleCreateCard}
                     disabled={!selectedMovement || !selectedActivity || !selectedWeather || !selectedMood}
-                    className="w-full rounded-2xl bg-amber-600 py-3.5 text-sm font-bold text-white hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-amber-600/25"
+                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
                   >
                     AI 큐레이션 카드 추천받기
                   </button>
