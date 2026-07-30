@@ -32,7 +32,7 @@ const FALLBACK_REASONS: Record<AIPersona, string[]> = {
   ]
 };
 
-// Diagnostic test for Gemini API Connection with detailed error reporting
+// Diagnostic test for Gemini API Connection targeting Google's primary gemini-1.5-flash model
 export const testGeminiConnection = async (apiKey?: string | null): Promise<{ success: boolean; message: string }> => {
   const geminiKey =
     apiKey ||
@@ -45,41 +45,35 @@ export const testGeminiConnection = async (apiKey?: string | null): Promise<{ su
   }
 
   const cleanKey = geminiKey.trim();
-  const models = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-pro"];
-  let lastError = "";
+  const primaryModel = "gemini-1.5-flash";
 
-  for (const model of models) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: "Hello" }] }],
-            generationConfig: { maxOutputTokens: 15 }
-          })
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          return { success: true, message: `✅ Gemini AI 실시간 연결 성공! (${model} 모델 반응 확인)` };
-        }
-      } else {
-        const errJson = await response.json().catch(() => null);
-        const errMsg = errJson?.error?.message || response.statusText;
-        lastError = `[${response.status}] ${errMsg}`;
-        console.warn(`Gemini model ${model} error:`, lastError);
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${primaryModel}:generateContent?key=${encodeURIComponent(cleanKey)}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Hello" }] }],
+          generationConfig: { maxOutputTokens: 15 }
+        })
       }
-    } catch (e: any) {
-      lastError = e?.message || "네트워크 오류";
-    }
-  }
+    );
 
-  return { success: false, message: `❌ Gemini API 호출 실패: ${lastError}` };
+    if (response.ok) {
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        return { success: true, message: `✅ Gemini AI 실시간 연결 성공! (${primaryModel} 모델 정상 작동)` };
+      }
+    }
+
+    const errJson = await response.json().catch(() => null);
+    const errMsg = errJson?.error?.message || response.statusText;
+    return { success: false, message: `❌ Gemini API 호출 에러 [HTTP ${response.status}]: ${errMsg}` };
+  } catch (e: any) {
+    return { success: false, message: `❌ 네트워크 통신 에러: ${e?.message || "알 수 없는 오류"}` };
+  }
 };
 
 // Generate AI Reason via Gemini API or Fallback Templates
@@ -147,50 +141,47 @@ export const generateAIReason = async (
 4. 마크다운 기호(예: **, ##)는 절대 사용하지 마세요. 완성된 본문 문구만 바로 출력하세요.
 `;
 
-  // Official Gemini API endpoints to try in sequence
-  const models = ["gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-pro"];
-
-  for (const model of models) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(geminiKey)}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: prompt
-                  }
-                ]
-              }
-            ],
-            generationConfig: {
-              maxOutputTokens: 200,
-              temperature: 0.75
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
             }
-          })
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (resultText) {
-          return resultText.trim();
-        }
+          ],
+          generationConfig: {
+            maxOutputTokens: 200,
+            temperature: 0.75
+          }
+        })
       }
-    } catch (error) {
-      console.warn(`Gemini API call with ${model} failed:`, error);
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (resultText) {
+        return resultText.trim();
+      }
+    } else {
+      console.warn("Gemini API response error:", await response.text());
     }
+  } catch (error) {
+    console.warn("Gemini API call failed:", error);
   }
 
-  // Fallback if all API calls fail
+  // Fallback if API call fails
   const list = FALLBACK_REASONS[persona] || FALLBACK_REASONS.emotional;
   const index = Math.floor(Math.random() * list.length);
   return list[index];
