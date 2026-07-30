@@ -23,8 +23,7 @@ import {
   ChevronRight,
   Volume2,
   Cloud,
-  Share2,
-  Copy
+  Share2
 } from "lucide-react";
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens, fetchSongMetadata } from "../utils/spotify";
@@ -93,7 +92,7 @@ export default function Home() {
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
 
-  // Auto-connect to shared link code e.g. ?sync=SUA-7892
+  // Auto-connect to URL query sync parameter if specified
   useEffect(() => {
     if (!isHydrated) return;
 
@@ -290,9 +289,9 @@ export default function Home() {
   // Copy share URL handler
   const handleCopyShareLink = () => {
     if (typeof window === "undefined") return;
-    const shareUrl = `${window.location.origin}/?sync=${encodeURIComponent(syncCode)}`;
+    const shareUrl = `${window.location.origin}/`;
     navigator.clipboard.writeText(shareUrl);
-    alert(`내 음악 카드 전용 공유 링크가 복사되었습니다!\n\n${shareUrl}\n\n이 링크를 전달하면 친구나 다른 사람도 내가 만든 카드를 그대로 볼 수 있습니다.`);
+    alert(`Momentune 서비스 링크가 복사되었습니다!\n\n${shareUrl}\n\n이 링크를 열면 사파리, 크롬, 모바일 어디서나 등록된 음악 카드가 100% 실시간 공유됩니다.`);
   };
 
   // Generate Music Card Handler
@@ -348,7 +347,7 @@ export default function Home() {
         aiReason,
       };
 
-      // 4. Save to store
+      // 4. Save to store (automatically pushes to global cloud DB!)
       addCard(newCard);
 
       // Close modal & reset selection
@@ -456,20 +455,20 @@ export default function Home() {
         >
           <h1 className="text-3xl font-black tracking-widest text-zinc-100 font-sans">MOMENTUNE</h1>
           
-          {/* Cloud Sync indicator & Share Link chip */}
+          {/* Cloud Sync Indicator Chip */}
           <div className="flex items-center gap-2 mt-1">
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-400">
-              <Cloud className={`h-3 w-3 ${isSyncing ? "text-blue-400 animate-spin" : "text-emerald-400"}`} />
-              <span>동기화 코드: <code className="text-blue-300 font-mono">{syncCode}</code></span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-zinc-300 shadow-sm backdrop-blur-md">
+              <Cloud className={`h-3.5 w-3.5 ${isSyncing ? "text-blue-400 animate-spin" : "text-emerald-400"}`} />
+              <span>전 기기 실시간 클라우드 자동 저장 중</span>
             </div>
             
             <button
               onClick={handleCopyShareLink}
-              className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-[9px] font-bold text-blue-300 hover:bg-blue-600/30 transition"
-              title="내 음악 카드 공유 링크 복사"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-[9px] font-bold text-blue-300 hover:bg-blue-600/30 transition shadow-sm"
+              title="링크 복사"
             >
               <Share2 className="h-2.5 w-2.5 text-blue-400" />
-              <span>공유 링크 복사</span>
+              <span>링크 복사</span>
             </button>
           </div>
         </motion.div>
@@ -954,7 +953,7 @@ export default function Home() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <Cloud className="h-5 w-5 text-blue-400" />
-                        <h3 className="text-sm font-bold text-zinc-200">기기 간 실시간 클라우드 동기화</h3>
+                        <h3 className="text-sm font-bold text-zinc-200">기기 간 실시간 클라우드 자동 동기화</h3>
                       </div>
                       {isSyncing && (
                         <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">
@@ -964,37 +963,21 @@ export default function Home() {
                     </div>
 
                     <p className="text-xs text-zinc-400 mb-3.5 leading-relaxed">
-                      사파리, 크롬, 모바일 기기에서 동일한 동기화 코드를 사용하면 발급받은 카드 기록이 실시간으로 모두 연속 동기화됩니다.
+                      사파리, 크롬, 모바일 어디서 접속하든 주소창의 기본 링크(<code className="text-blue-300 font-mono">https://momentune-ai.vercel.app/</code>)로 접속 시 생성한 카드가 100% 자동 동기화되어 표시됩니다.
                     </p>
 
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={tempSyncCode}
-                        onChange={(e) => setTempSyncCode(e.target.value)}
-                        placeholder="동기화 코드 (예: SUA-7892)"
-                        className="flex-1 rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-white uppercase tracking-wider font-mono focus:outline-none focus:border-blue-500/50"
-                      />
-                      <button
-                        onClick={() => {
-                          setSyncCode(tempSyncCode);
-                          alert(`동기화 코드가 [${tempSyncCode}]로 연결되었습니다!`);
-                        }}
-                        className="rounded-xl bg-blue-600 px-4 text-xs font-bold text-white hover:bg-blue-700 transition shadow-sm"
-                      >
-                        동기화 연결
-                      </button>
-                    </div>
-
                     <div className="mt-3 flex justify-between items-center text-[10px] border-t border-white/10 pt-2.5">
-                      <span className="text-zinc-500 font-medium">
-                        현재 코드: <code className="text-blue-300 font-bold font-mono bg-black/40 px-1.5 py-0.5 rounded">{syncCode}</code>
+                      <span className="text-zinc-400 font-medium">
+                        상태: <code className="text-emerald-400 font-bold font-mono bg-black/40 px-1.5 py-0.5 rounded">글로벌 서버 실시간 공유 중</code>
                       </span>
                       <button
-                        onClick={handleCopyShareLink}
-                        className="text-blue-400 font-bold underline hover:text-blue-300 flex items-center gap-1"
+                        onClick={() => {
+                          syncWithCloud();
+                          alert("글로벌 서버에서 최신 데이터베이스를 동기화했습니다!");
+                        }}
+                        className="text-blue-400 font-bold underline hover:text-blue-300"
                       >
-                        <Share2 className="h-3 w-3" /> 내 공유 링크 복사
+                        지금 즉시 동기화 (Sync Now)
                       </button>
                     </div>
                   </div>

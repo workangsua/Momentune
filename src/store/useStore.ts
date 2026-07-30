@@ -43,12 +43,6 @@ export const getLocalDateKey = (dateInput?: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// Generate random sync code (e.g. SUA-7892)
-const generateRandomSyncCode = () => {
-  const num = Math.floor(1000 + Math.random() * 9000);
-  return `SUA-${num}`;
-};
-
 export const useStore = create<StoreState>((set, get) => ({
   todayCards: [],
   historyCards: [],
@@ -60,7 +54,7 @@ export const useStore = create<StoreState>((set, get) => ({
   geminiKey: '',
   aiPersona: 'emotional',
   settingsPasscode: null,
-  syncCode: 'SUA-7892',
+  syncCode: 'global_main',
   isHydrated: false,
   isSyncing: false,
 
@@ -72,7 +66,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
     }
-    // Push update to cloud sync API
+    // Push update to global cloud sync API
     get().syncWithCloud();
   },
 
@@ -90,7 +84,7 @@ export const useStore = create<StoreState>((set, get) => ({
         localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
       }
     }
-    // Push update to cloud sync API
+    // Push update to global cloud sync API
     get().syncWithCloud();
   },
 
@@ -113,7 +107,6 @@ export const useStore = create<StoreState>((set, get) => ({
       if (user) localStorage.setItem('momentune_spotify_user', user);
       else localStorage.removeItem('momentune_spotify_user');
     }
-    // Sync with cloud using Spotify user ID
     get().syncWithCloud();
   },
 
@@ -140,7 +133,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   setSyncCode: (code) => {
-    const trimmed = code.trim() || 'SUA-7892';
+    const trimmed = code.trim() || 'global_main';
     set({ syncCode: trimmed });
     if (typeof window !== 'undefined') {
       localStorage.setItem('momentune_sync_code', trimmed);
@@ -149,8 +142,7 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   syncWithCloud: async () => {
-    const code = get().spotifyUser ? `user_${get().spotifyUser}` : get().syncCode;
-    if (!code) return;
+    const code = get().syncCode || 'global_main';
 
     set({ isSyncing: true });
     try {
@@ -184,7 +176,7 @@ export const useStore = create<StoreState>((set, get) => ({
           localStorage.setItem('momentune_history_cards', JSON.stringify(mergedHistory));
         }
 
-        // 2. Push merged state back to cloud
+        // 2. Push merged state back to global cloud
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -251,9 +243,9 @@ export const useStore = create<StoreState>((set, get) => ({
       const storedPasscode = localStorage.getItem('momentune_passcode');
       
       let storedSyncCode = localStorage.getItem('momentune_sync_code');
-      if (!storedSyncCode) {
-        storedSyncCode = generateRandomSyncCode();
-        localStorage.setItem('momentune_sync_code', storedSyncCode);
+      if (!storedSyncCode || storedSyncCode.startsWith("SUA-")) {
+        storedSyncCode = 'global_main';
+        localStorage.setItem('momentune_sync_code', 'global_main');
       }
 
       set({
@@ -273,7 +265,7 @@ export const useStore = create<StoreState>((set, get) => ({
       // Run automatic date archiving
       get().archiveOldCards();
 
-      // Trigger cloud sync to pull cards from Safari/Chrome
+      // Trigger global cloud sync immediately to pull all registered cards
       get().syncWithCloud();
     } catch (e) {
       console.error("Hydration error:", e);

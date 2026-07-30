@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
-// Serverless in-memory & cloud KV store sync route
+// Global shared cloud KV store sync route
 const memoryStore: Record<string, any> = {};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code') || 'default_user';
+  const code = searchParams.get('code') || 'global_main';
 
   try {
     // Try reading from global cloud KV store (kvdb.io)
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { code, todayCards, historyCards } = body;
-    const syncCode = code || 'default_user';
+    const syncCode = code || 'global_main';
     const payload = { todayCards: todayCards || [], historyCards: historyCards || [], updatedAt: new Date().toISOString() };
 
     memoryStore[syncCode] = payload;
