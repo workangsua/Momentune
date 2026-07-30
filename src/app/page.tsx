@@ -342,7 +342,7 @@ export default function Home() {
                   </div>
 
                   {/* 3D Swipe Stack Container */}
-                  <div className="relative h-[490px] w-full flex items-center justify-center overflow-hidden mt-4">
+                  <div className="relative h-[500px] w-full flex items-center justify-center overflow-hidden mt-4">
                     <AnimatePresence initial={false}>
                       {todayCards.map((card, idx) => {
                         const offset = idx - activeIndex;
@@ -384,50 +384,40 @@ export default function Home() {
                             {/* Premium Ticket Card Body */}
                             <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
                               
-                              {/* Inner visual block */}
-                              <div className="aspect-square w-full rounded-2xl bg-blue-500/5 p-5 flex flex-col justify-between relative border border-white/5 overflow-hidden">
-                                <div className="flex flex-wrap gap-1">
+                              {/* Large Album Cover Image (Instead of rotating player) */}
+                              <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
+                                <img
+                                  src={card.track.albumCover}
+                                  alt="Album Cover"
+                                  className="h-full w-full object-cover"
+                                />
+                                
+                                {/* Situation chips overlay on top-left */}
+                                <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                                   {Object.values(card.context).map((tag, tIdx) => tag && (
                                     <span
                                       key={tIdx}
-                                      className="inline-block rounded-full bg-white/10 border border-white/5 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
+                                      className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-zinc-350 font-bold"
                                     >
                                       {tag}
                                     </span>
                                   ))}
                                 </div>
 
-                                <div className="relative flex flex-col items-center justify-center my-auto">
-                                  <div className="relative h-28 w-28 flex-shrink-0 shadow-xl rounded-full overflow-hidden record-spin border border-white/10">
-                                    <img
-                                      src={card.track.albumCover}
-                                      alt="Cover"
-                                      className="h-full w-full object-cover"
-                                    />
-                                    <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
-                                      <div className="h-6 w-6 rounded-full bg-[#1c1c1c] border-2 border-white/10 flex items-center justify-center">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flex justify-between items-end border-t border-white/10 pt-2.5 mt-2">
-                                  <span className="text-[9px] text-zinc-400 font-bold font-mono uppercase tracking-wider">
-                                    MOMENTUNE STAMP
-                                  </span>
-                                  <span className="text-[9px] text-zinc-400 font-bold font-mono">
+                                {/* Stamp overlay on bottom-right */}
+                                <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
+                                  <span className="text-[9px] text-zinc-300 font-bold font-mono">
                                     {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Metadata section */}
+                              {/* Title & Artist with size hierarchy and left alignment */}
                               <div className="mt-5 px-1">
                                 <div className="flex justify-between items-start gap-4">
-                                  <div className="min-w-0 flex-1">
-                                    <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                    <p className="text-xs text-zinc-400 truncate mt-0.5 font-semibold">{card.track.artist}</p>
+                                  <div className="min-w-0 flex-1 text-left">
+                                    <h4 className="text-xl font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
+                                    <p className="text-xs text-blue-400 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
                                   </div>
                                   <button
                                     onClick={() => {
@@ -441,15 +431,16 @@ export default function Home() {
                                   </button>
                                 </div>
 
+                                {/* AI Curated Reason - Stripped of quotes */}
                                 <div className="mt-4 pt-3.5 border-t border-white/5">
-                                  <p className="text-xs text-zinc-300 leading-relaxed font-semibold italic whitespace-pre-line">
-                                    "{card.aiReason}"
+                                  <p className="text-xs text-zinc-300 leading-relaxed font-semibold">
+                                    {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
                                   </p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Protruding Ticket Stub */}
+                            {/* Protruding Ticket Stub (Spotify button) */}
                             <a
                               href={card.track.spotifyUrl}
                               target="_blank"
@@ -478,7 +469,7 @@ export default function Home() {
                         <button
                           onClick={() => activeIndex > 0 && setActiveIndex(activeIndex - 1)}
                           disabled={activeIndex === 0}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-350 hover:text-white disabled:opacity-30 transition"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-355 hover:text-white disabled:opacity-30 transition"
                         >
                           <ChevronLeft className="h-4.5 w-4.5" />
                         </button>
@@ -490,7 +481,7 @@ export default function Home() {
                         <button
                           onClick={() => activeIndex < todayCards.length - 1 && setActiveIndex(activeIndex + 1)}
                           disabled={activeIndex === todayCards.length - 1}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-350 hover:text-white disabled:opacity-30 transition"
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-355 hover:text-white disabled:opacity-30 transition"
                         >
                           <ChevronRight className="h-4.5 w-4.5" />
                         </button>
@@ -580,49 +571,40 @@ export default function Home() {
                             <div key={card.id} className="relative group">
                               <div className="bg-white/5 border border-white/10 rounded-[32px] p-4 pb-6 flex flex-col relative overflow-hidden shadow-2xl backdrop-blur-md">
                                 
-                                {/* Inner visual */}
-                                <div className="aspect-square w-full rounded-2xl bg-blue-500/5 p-5 flex flex-col justify-between relative border border-white/5 overflow-hidden">
-                                  <div className="flex flex-wrap gap-1">
+                                {/* Large Album Cover Image (Instead of rotating player) */}
+                                <div className="relative aspect-square w-full rounded-[24px] overflow-hidden border border-white/5 shadow-inner bg-black/10">
+                                  <img
+                                    src={card.track.albumCover}
+                                    alt="Album Cover"
+                                    className="h-full w-full object-cover"
+                                  />
+                                  
+                                  {/* Situation chips */}
+                                  <div className="absolute top-3 left-3 flex flex-wrap gap-1">
                                     {Object.values(card.context).map((tag, tIdx) => tag && (
                                       <span
                                         key={tIdx}
-                                        className="inline-block rounded-full bg-white/10 border border-white/5 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
+                                        className="inline-block rounded-full bg-black/50 backdrop-blur-md border border-white/10 px-2.5 py-0.5 text-[9px] text-blue-300 font-bold"
                                       >
                                         {tag}
                                       </span>
                                     ))}
                                   </div>
 
-                                  <div className="relative flex flex-col items-center justify-center my-auto">
-                                    <div className="relative h-24 w-24 flex-shrink-0 shadow-lg rounded-full overflow-hidden record-spin border border-white/20">
-                                      <img
-                                        src={card.track.albumCover}
-                                        alt="Cover"
-                                        className="h-full w-full object-cover"
-                                      />
-                                      <div className="absolute inset-0 bg-black/5 rounded-full flex items-center justify-center">
-                                        <div className="h-5 w-5 rounded-full bg-[#1c1c1c] border border-white/15 flex items-center justify-center">
-                                          <div className="h-1 w-1 rounded-full bg-white"></div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="flex justify-between items-end border-t border-white/10 pt-2.5 mt-2">
-                                    <span className="text-[9px] text-zinc-400 font-bold font-mono uppercase tracking-wider">
-                                      ARCHIVE STAMP
-                                    </span>
-                                    <span className="text-[9px] text-zinc-400 font-bold font-mono">
+                                  {/* Stamp */}
+                                  <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md">
+                                    <span className="text-[9px] text-zinc-300 font-bold font-mono">
                                       {new Date(card.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                   </div>
                                 </div>
 
+                                {/* Title & Artist */}
                                 <div className="mt-5 px-1">
                                   <div className="flex justify-between items-start gap-4">
-                                    <div className="min-w-0 flex-1">
-                                      <h4 className="text-base font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
-                                      <p className="text-xs text-zinc-400 truncate mt-0.5 font-semibold">{card.track.artist}</p>
+                                    <div className="min-w-0 flex-1 text-left">
+                                      <h4 className="text-xl font-extrabold text-zinc-100 truncate tracking-tight">{card.track.title}</h4>
+                                      <p className="text-xs text-blue-400 font-bold tracking-wide uppercase mt-1">{card.track.artist}</p>
                                     </div>
                                     <button
                                       onClick={() => deleteCard(card.id, true)}
@@ -633,9 +615,10 @@ export default function Home() {
                                     </button>
                                   </div>
 
+                                  {/* AI Curated Reason - Stripped of quotes */}
                                   <div className="mt-4 pt-3.5 border-t border-white/5">
-                                    <p className="text-xs text-zinc-350 leading-relaxed font-semibold italic whitespace-pre-line">
-                                      "{card.aiReason}"
+                                    <p className="text-xs text-zinc-300 leading-relaxed font-semibold">
+                                      {card.aiReason.replace(/^["'“”]+|["'“”]+$/g, '')}
                                     </p>
                                   </div>
                                 </div>
@@ -765,7 +748,7 @@ export default function Home() {
                           value={tempClientId}
                           onChange={(e) => setTempClientId(e.target.value)}
                           placeholder="Spotify Developer Client ID 입력"
-                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-350 placeholder-zinc-550 focus:outline-none focus:border-blue-500/50 text-white"
+                          className="w-full rounded-xl bg-black/40 border border-white/10 px-3.5 py-3 text-xs text-zinc-355 placeholder-zinc-550 focus:outline-none focus:border-blue-500/50 text-white"
                         />
                       </div>
 
@@ -1077,7 +1060,7 @@ export default function Home() {
                   <button
                     onClick={handleCreateCard}
                     disabled={!selectedMovement || !selectedActivity || !selectedWeather || !selectedMood}
-                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-amber-700 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
+                    className="w-full rounded-2xl bg-blue-600 py-3.5 text-sm font-bold text-white hover:bg-blue-750 transition disabled:opacity-40 disabled:cursor-not-allowed mt-4 shadow-md shadow-blue-600/20"
                   >
                     AI 큐레이션 카드 추천받기
                   </button>
