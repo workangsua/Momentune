@@ -29,6 +29,30 @@ import { generateAIReason } from "../utils/gemini";
 import { playCardSongHighlight, stopAudioPreview, fetchSongPreviewUrl } from "../utils/audio";
 import { MusicCard, AIPersona } from "../types";
 
+// Helper to balance cards around the latest card in the center, with older cards peeking on both left & right
+const getBalancedCarouselList = (cards: MusicCard[]) => {
+  if (cards.length <= 1) return { list: cards, centerIndex: 0 };
+
+  const latest = cards[0];
+  const rest = cards.slice(1);
+
+  const left: MusicCard[] = [];
+  const right: MusicCard[] = [];
+
+  rest.forEach((card, i) => {
+    if (i % 2 === 0) {
+      left.unshift(card);
+    } else {
+      right.push(card);
+    }
+  });
+
+  const list = [...left, latest, ...right];
+  const centerIndex = left.length;
+
+  return { list, centerIndex };
+};
+
 export default function Home() {
   const {
     todayCards,
@@ -153,13 +177,16 @@ export default function Home() {
   const [inputPasscode, setInputPasscode] = useState("");
   const [newPasscode, setNewPasscode] = useState("");
 
-  // Active Index for Today Cards Carousel
-  const [activeIndex, setActiveIndex] = useState(0);
+  // Compute balanced carousel list for today's cards
+  const { list: carouselCards, centerIndex } = getBalancedCarouselList(todayCards);
 
-  // Set activeIndex to 0 when a new card is added
+  // Active Index for Today Cards Carousel
+  const [activeIndex, setActiveIndex] = useState(centerIndex);
+
+  // Set activeIndex to centerIndex when a new card is added or when todayCards changes
   useEffect(() => {
-    setActiveIndex(0);
-  }, [todayCards.length]);
+    setActiveIndex(centerIndex);
+  }, [todayCards.length, centerIndex]);
 
   // Hierarchical Context Selector Modal State
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
@@ -438,13 +465,13 @@ export default function Home() {
                   </button>
                 </div>
               ) : (
-                // 3D Carousel Coverflow of today's cards
+                // 3D Carousel Coverflow of today's cards - Most recent card is in CENTER, older cards peek on left & right
                 <div className="flex flex-col gap-4 flex-1 justify-center py-2">
                   {/* Summary Bar */}
                   <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
                       <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드를 클릭하거나 터치하면 원곡 하이라이트가 즉시 재생됩니다.</p>
+                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">가장 최근 발급 카드가 중앙에 배치됩니다. 좌우로 스와이프해 보세요.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
@@ -457,7 +484,7 @@ export default function Home() {
                   {/* 3D Swipe Stack Container */}
                   <div className="relative h-[530px] w-full flex items-center justify-center overflow-visible mt-4">
                     <AnimatePresence initial={false}>
-                      {todayCards.map((card, idx) => {
+                      {carouselCards.map((card, idx) => {
                         const offset = idx - activeIndex;
                         const isActive = offset === 0;
                         const isVisible = Math.abs(offset) <= 1;
@@ -486,7 +513,7 @@ export default function Home() {
                             dragConstraints={{ left: 0, right: 0 }}
                             onDragEnd={(e, info) => {
                               const swipeThreshold = 50;
-                              if (info.offset.x < -swipeThreshold && activeIndex < todayCards.length - 1) {
+                              if (info.offset.x < -swipeThreshold && activeIndex < carouselCards.length - 1) {
                                 setActiveIndex(activeIndex + 1);
                               } else if (info.offset.x > swipeThreshold && activeIndex > 0) {
                                 setActiveIndex(activeIndex - 1);
@@ -589,7 +616,7 @@ export default function Home() {
                   </div>
 
                   {/* Navigation Helper Buttons and Indicators */}
-                  {todayCards.length > 1 && (
+                  {carouselCards.length > 1 && (
                     <div className="flex flex-col items-center gap-3 mt-4">
                       <div className="flex items-center gap-8">
                         <button
@@ -601,12 +628,12 @@ export default function Home() {
                         </button>
                         
                         <span className="text-xs font-bold font-mono text-zinc-400 tracking-wider">
-                          {activeIndex + 1} <span className="text-zinc-650">/</span> {todayCards.length}
+                          {activeIndex + 1} <span className="text-zinc-650">/</span> {carouselCards.length}
                         </span>
 
                         <button
-                          onClick={() => activeIndex < todayCards.length - 1 && setActiveIndex(activeIndex + 1)}
-                          disabled={activeIndex === todayCards.length - 1}
+                          onClick={() => activeIndex < carouselCards.length - 1 && setActiveIndex(activeIndex + 1)}
+                          disabled={activeIndex === carouselCards.length - 1}
                           className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/10 text-zinc-355 hover:text-white disabled:opacity-30 transition"
                         >
                           <ChevronRight className="h-4.5 w-4.5" />
@@ -615,7 +642,7 @@ export default function Home() {
 
                       {/* Swipe Dots */}
                       <div className="flex justify-center gap-1.5">
-                        {todayCards.map((_, idx) => (
+                        {carouselCards.map((_, idx) => (
                           <button
                             key={idx}
                             onClick={() => setActiveIndex(idx)}
