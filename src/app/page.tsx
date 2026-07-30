@@ -26,6 +26,7 @@ import {
 import { useStore, getLocalDateKey } from "../store/useStore";
 import { getRandomTrack, redirectToSpotifyAuth, fetchSpotifyTokens } from "../utils/spotify";
 import { generateAIReason } from "../utils/gemini";
+import { playAudioPreview, stopAudioPreview, initAudioContext } from "../utils/audio";
 import { MusicCard, AIPersona } from "../types";
 
 export default function Home() {
@@ -60,51 +61,35 @@ export default function Home() {
 
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
-  const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
 
   // Play climax/highlight audio preview on hover or tap
-  const playTrackPreview = (card: MusicCard) => {
-    const previewUrl = card.track.previewUrl || "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+  const handlePlayPreview = (card: MusicCard) => {
+    initAudioContext();
 
-    if (playingCardId === card.id && audioInstance) {
-      audioInstance.pause();
+    if (playingCardId === card.id) {
+      stopAudioPreview();
       setPlayingCardId(null);
       return;
     }
 
-    if (audioInstance) {
-      audioInstance.pause();
-    }
-
-    try {
-      const newAudio = new Audio(previewUrl);
-      newAudio.volume = 0.6;
-      newAudio.play().catch((err) => console.log("Audio preview play notice:", err));
-      newAudio.onended = () => {
-        setPlayingCardId(null);
-      };
-      setAudioInstance(newAudio);
-      setPlayingCardId(card.id);
-    } catch (e) {
-      console.warn("Audio element error:", e);
-    }
+    setPlayingCardId(card.id);
+    playAudioPreview(card.track.previewUrl, () => {
+      setPlayingCardId(null);
+    });
   };
 
-  const stopTrackPreview = () => {
-    if (audioInstance) {
-      audioInstance.pause();
-      setPlayingCardId(null);
-    }
+  const handleStopPreview = () => {
+    stopAudioPreview();
+    setPlayingCardId(null);
   };
 
   // Cleanup audio on tab switch or unmount
   useEffect(() => {
     return () => {
-      if (audioInstance) {
-        audioInstance.pause();
-      }
+      stopAudioPreview();
+      setPlayingCardId(null);
     };
-  }, [audioInstance, activeTab]);
+  }, [activeTab]);
 
   // Handle Spotify Redirect Callback
   useEffect(() => {
@@ -380,7 +365,7 @@ export default function Home() {
                   <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 shadow-sm backdrop-blur-md">
                     <div>
                       <h3 className="text-xs font-bold text-zinc-300">오늘 발급된 음악 티켓</h3>
-                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드를 올리거나 터치하면 하이라이트 미리보기가 재생됩니다.</p>
+                      <p className="text-[10px] text-zinc-550 mt-0.5 font-medium">카드를 클릭하거나 터치하면 하이라이트 미리보기가 재생됩니다.</p>
                     </div>
                     <button
                       onClick={() => setIsSelectorOpen(true)}
@@ -428,9 +413,9 @@ export default function Home() {
                                 setActiveIndex(activeIndex - 1);
                               }
                             }}
-                            onMouseEnter={() => isActive && playTrackPreview(card)}
-                            onMouseLeave={() => stopTrackPreview()}
-                            onClick={() => isActive && playTrackPreview(card)}
+                            onMouseEnter={() => isActive && handlePlayPreview(card)}
+                            onMouseLeave={() => handleStopPreview()}
+                            onClick={() => isActive && handlePlayPreview(card)}
                             className="absolute w-full max-w-[310px] overflow-visible cursor-pointer"
                           >
                             {/* Protruding Blue Tab Layered BEHIND Main Card - Extended down by 36px so it's 100% visible */}
@@ -476,8 +461,8 @@ export default function Home() {
                                 {/* Playing audio highlight indicator */}
                                 {playingCardId === card.id && (
                                   <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 backdrop-blur-md border border-white/20 px-2.5 py-1 text-[9px] text-white font-bold animate-pulse shadow-lg">
-                                    <Volume2 className="h-3 w-3 animate-bounce" />
-                                    <span>HIGHLIGHT PLAYING</span>
+                                    <Volume2 className="h-3 w-3 animate-bounce text-white" />
+                                    <span>PLAYING</span>
                                   </div>
                                 )}
 
@@ -632,12 +617,12 @@ export default function Home() {
                           {cards.map((card) => (
                             <div
                               key={card.id}
-                              onMouseEnter={() => playTrackPreview(card)}
-                              onMouseLeave={() => stopTrackPreview()}
-                              onClick={() => playTrackPreview(card)}
+                              onMouseEnter={() => handlePlayPreview(card)}
+                              onMouseLeave={() => handleStopPreview()}
+                              onClick={() => handlePlayPreview(card)}
                               className="relative group overflow-visible cursor-pointer"
                             >
-                              {/* Protruding Blue Tab Layered BEHIND Main Card - Extended down by 36px */}
+                              {/* Protruding Blue Tab Layered BEHIND Main Card */}
                               <a
                                 href={card.track.spotifyUrl}
                                 target="_blank"
@@ -679,8 +664,8 @@ export default function Home() {
                                   {/* Playing audio highlight indicator */}
                                   {playingCardId === card.id && (
                                     <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-blue-600/90 backdrop-blur-md border border-white/20 px-2.5 py-1 text-[9px] text-white font-bold animate-pulse shadow-lg">
-                                      <Volume2 className="h-3 w-3 animate-bounce" />
-                                      <span>HIGHLIGHT PLAYING</span>
+                                      <Volume2 className="h-3 w-3 animate-bounce text-white" />
+                                      <span>PLAYING</span>
                                     </div>
                                   )}
 
@@ -897,7 +882,7 @@ export default function Home() {
                               setGeminiKey(tempGeminiKey);
                               alert("Gemini API 키가 저장되었습니다.");
                             }}
-                            className="rounded-xl bg-blue-650 px-4 text-xs font-bold text-white hover:bg-blue-750 transition shadow-sm shadow-blue-600/10"
+                            className="rounded-xl bg-blue-650 px-4 text-xs font-bold text-white hover:bg-blue-755 transition shadow-sm shadow-blue-600/10"
                           >
                             저장
                           </button>
