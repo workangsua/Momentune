@@ -1,49 +1,56 @@
 import { NextResponse } from 'next/server';
 
-// Global shared cloud KV store sync route
-const memoryStore: Record<string, any> = {};
+const GLOBAL_DB_OBJECT_ID = "ff8081819f7e10ae019fb48a72e55002";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code') || 'global_main';
-
+export async function GET() {
   try {
-    // Try reading from global cloud KV store (kvdb.io)
-    const kvRes = await fetch(`https://kvdb.io/momentune_cloud_v1/${encodeURIComponent(code)}`, {
-      headers: { 'Cache-Control': 'no-cache' },
+    const res = await fetch(`https://api.restful-api.dev/objects/${GLOBAL_DB_OBJECT_ID}`, {
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' },
       cache: 'no-store'
     });
-    if (kvRes.ok) {
-      const data = await kvRes.json();
-      memoryStore[code] = data;
-      return NextResponse.json(data);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.data) {
+        return NextResponse.json(data.data);
+      }
     }
   } catch (err) {
-    console.warn("KV fetch fallback:", err);
+    console.warn("Global DB GET warning:", err);
   }
 
-  // Fallback to server memory
-  return NextResponse.json(memoryStore[code] || { todayCards: [], historyCards: [] });
+  return NextResponse.json({ todayCards: [], historyCards: [] });
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { code, todayCards, historyCards } = body;
-    const syncCode = code || 'global_main';
-    const payload = { todayCards: todayCards || [], historyCards: historyCards || [], updatedAt: new Date().toISOString() };
+    const { todayCards, historyCards } = body;
+    const payload = {
+      todayCards: todayCards || [],
+      historyCards: historyCards || [],
+      updatedAt: new Date().toISOString()
+    };
 
-    memoryStore[syncCode] = payload;
-
-    // Push to global cloud KV store
-    await fetch(`https://kvdb.io/momentune_cloud_v1/${encodeURIComponent(syncCode)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    const res = await fetch(`https://api.restful-api.dev/objects/${GLOBAL_DB_OBJECT_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: "momentune_global_v1",
+        data: payload
+      })
     });
 
-    return NextResponse.json({ success: true, payload });
+    if (res.ok) {
+      return NextResponse.json({ success: true, payload });
+    } else {
+      console.error("Global DB PUT failed:", await res.text());
+    }
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Global DB POST error:", err);
   }
+
+  return NextResponse.json({ success: false });
 }

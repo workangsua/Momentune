@@ -66,7 +66,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
     }
-    // Push update to global cloud sync API
+    // Push update to global cloud sync API immediately
     get().syncWithCloud();
   },
 
@@ -84,7 +84,7 @@ export const useStore = create<StoreState>((set, get) => ({
         localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
       }
     }
-    // Push update to global cloud sync API
+    // Push update to global cloud sync API immediately
     get().syncWithCloud();
   },
 
@@ -142,12 +142,10 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   syncWithCloud: async () => {
-    const code = get().syncCode || 'global_main';
-
     set({ isSyncing: true });
     try {
-      // 1. Fetch cloud cards
-      const res = await fetch(`/api/sync?code=${encodeURIComponent(code)}`);
+      // 1. Fetch current global cloud cards
+      const res = await fetch('/api/sync', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         const cloudToday: MusicCard[] = data.todayCards || [];
@@ -158,13 +156,17 @@ export const useStore = create<StoreState>((set, get) => ({
 
         // Merge & deduplicate by card ID
         const todayMap = new Map<string, MusicCard>();
-        [...localToday, ...cloudToday].forEach((c) => todayMap.set(c.id, c));
+        [...localToday, ...cloudToday].forEach((c) => {
+          if (c && c.id) todayMap.set(c.id, c);
+        });
         const mergedToday = Array.from(todayMap.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
 
         const historyMap = new Map<string, MusicCard>();
-        [...localHistory, ...cloudHistory].forEach((c) => historyMap.set(c.id, c));
+        [...localHistory, ...cloudHistory].forEach((c) => {
+          if (c && c.id) historyMap.set(c.id, c);
+        });
         const mergedHistory = Array.from(historyMap.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -176,15 +178,15 @@ export const useStore = create<StoreState>((set, get) => ({
           localStorage.setItem('momentune_history_cards', JSON.stringify(mergedHistory));
         }
 
-        // 2. Push merged state back to global cloud
+        // 2. Push merged state back to global cloud DB
         await fetch('/api/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, todayCards: mergedToday, historyCards: mergedHistory }),
+          body: JSON.stringify({ todayCards: mergedToday, historyCards: mergedHistory }),
         });
       }
     } catch (err) {
-      console.warn("Cloud sync warning:", err);
+      console.warn("Cloud sync error:", err);
     } finally {
       set({ isSyncing: false });
     }
@@ -241,12 +243,6 @@ export const useStore = create<StoreState>((set, get) => ({
       const storedGeminiKey = localStorage.getItem('momentune_gemini_key');
       const storedPersona = localStorage.getItem('momentune_ai_persona');
       const storedPasscode = localStorage.getItem('momentune_passcode');
-      
-      let storedSyncCode = localStorage.getItem('momentune_sync_code');
-      if (!storedSyncCode || storedSyncCode.startsWith("SUA-")) {
-        storedSyncCode = 'global_main';
-        localStorage.setItem('momentune_sync_code', 'global_main');
-      }
 
       set({
         todayCards: storedToday ? JSON.parse(storedToday) : [],
@@ -258,7 +254,7 @@ export const useStore = create<StoreState>((set, get) => ({
         geminiKey: storedGeminiKey || '',
         aiPersona: (storedPersona as AIPersona) || 'emotional',
         settingsPasscode: storedPasscode || null,
-        syncCode: storedSyncCode,
+        syncCode: 'global_main',
         isHydrated: true,
       });
 

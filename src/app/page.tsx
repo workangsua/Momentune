@@ -92,17 +92,26 @@ export default function Home() {
   // Audio highlight preview state
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
 
-  // Auto-connect to URL query sync parameter if specified
+  // Auto sync cards from global cloud DB periodically (every 3s) & on window focus
   useEffect(() => {
     if (!isHydrated) return;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const syncParam = urlParams.get("sync") || urlParams.get("syncCode");
+    syncWithCloud();
 
-    if (syncParam) {
-      setSyncCode(syncParam);
-    }
-  }, [isHydrated, setSyncCode]);
+    const interval = setInterval(() => {
+      syncWithCloud();
+    }, 3000);
+
+    const handleFocus = () => {
+      syncWithCloud();
+    };
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [isHydrated, syncWithCloud]);
 
   // Background pre-fetch real official album covers & preview URLs for cards stored in localStorage
   useEffect(() => {
@@ -275,23 +284,21 @@ export default function Home() {
   // Config Input fields
   const [tempClientId, setTempClientId] = useState("");
   const [tempGeminiKey, setTempGeminiKey] = useState("");
-  const [tempSyncCode, setTempSyncCode] = useState("");
 
   // Keep input fields synchronized with store state once hydrated
   useEffect(() => {
     if (isHydrated) {
       setTempClientId(spotifyClientId);
       setTempGeminiKey(geminiKey);
-      setTempSyncCode(syncCode);
     }
-  }, [isHydrated, spotifyClientId, geminiKey, syncCode]);
+  }, [isHydrated, spotifyClientId, geminiKey]);
 
   // Copy share URL handler
   const handleCopyShareLink = () => {
     if (typeof window === "undefined") return;
     const shareUrl = `${window.location.origin}/`;
     navigator.clipboard.writeText(shareUrl);
-    alert(`Momentune 서비스 링크가 복사되었습니다!\n\n${shareUrl}\n\n이 링크를 열면 사파리, 크롬, 모바일 어디서나 등록된 음악 카드가 100% 실시간 공유됩니다.`);
+    alert(`Momentune 웹 서비스 링크가 복사되었습니다!\n\n${shareUrl}\n\n사파리, 크롬, 모바일 어디서나 접속하면 생성한 모든 카드가 100% 자동 동기화됩니다.`);
   };
 
   // Generate Music Card Handler
