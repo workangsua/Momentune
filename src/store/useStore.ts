@@ -21,7 +21,7 @@ interface StoreState {
   // Actions
   setActiveTab: (tab: 'today' | 'history' | 'settings') => void;
   addCard: (card: MusicCard) => void;
-  deleteCard: (id: string, isHistory: boolean) => void;
+  deleteCard: (id: string, isHistory: boolean) => Promise<void>;
   setSpotifyClientId: (clientId: string) => void;
   setSpotifyToken: (token: string | null, refreshToken: string | null, user: string | null) => void;
   setGeminiKey: (key: string) => void;
@@ -29,7 +29,7 @@ interface StoreState {
   setSettingsPasscode: (passcode: string | null) => void;
   setSupabaseConfig: (url: string, key: string) => void;
   syncWithCloud: () => Promise<void>;
-  clearHistory: () => void;
+  clearHistory: () => Promise<void>;
   
   // Archive Logic
   archiveOldCards: () => void;
@@ -75,24 +75,37 @@ export const useStore = create<StoreState>((set, get) => ({
     get().syncWithCloud();
   },
 
-  deleteCard: (id, isHistory) => {
+  deleteCard: async (id, isHistory) => {
+    let newToday = get().todayCards;
+    let newHistory = get().historyCards;
+
     if (isHistory) {
-      const updated = get().historyCards.filter((c) => c.id !== id);
-      set({ historyCards: updated });
+      newHistory = newHistory.filter((c) => c.id !== id);
+      set({ historyCards: newHistory });
       if (typeof window !== 'undefined') {
-        localStorage.setItem('momentune_history_cards', JSON.stringify(updated));
+        localStorage.setItem('momentune_history_cards', JSON.stringify(newHistory));
       }
     } else {
-      const updated = get().todayCards.filter((c) => c.id !== id);
-      set({ todayCards: updated });
+      newToday = newToday.filter((c) => c.id !== id);
+      set({ todayCards: newToday });
       if (typeof window !== 'undefined') {
-        localStorage.setItem('momentune_today_cards', JSON.stringify(updated));
+        localStorage.setItem('momentune_today_cards', JSON.stringify(newToday));
       }
     }
-    // Delete from Supabase PostgreSQL DB if configured
+
+    // 1. Delete from Supabase PostgreSQL DB if configured
     deleteCardFromSupabase(id);
-    // Push update to global cloud sync API
-    get().syncWithCloud();
+
+    // 2. Overwrite serverless cloud DB immediately so deleted card NEVER resurrects
+    try {
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ todayCards: newToday, historyCards: newHistory }),
+      });
+    } catch (e) {
+      console.warn("Delete sync error:", e);
+    }
   },
 
   setSpotifyClientId: (clientId) => {
@@ -218,12 +231,21 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
-  clearHistory: () => {
+  clearHistory: async () => {
     set({ historyCards: [] });
     if (typeof window !== 'undefined') {
       localStorage.removeItem('momentune_history_cards');
     }
-    get().syncWithCloud();
+    const currentToday = get().todayCards;
+    try {
+      await fetch('/api/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ todayCards: currentToday, historyCards: [] }),
+      });
+    } catch (e) {
+      console.warn("Clear history sync warning:", e);
+    }
   },
 
   archiveOldCards: () => {
