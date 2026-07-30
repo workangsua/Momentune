@@ -1,0 +1,22 @@
+{
+  "name": "Momentune",
+  "short_name": "Momentune",
+  "description": "오늘 이 순간의 음악 카드를 모으고 기록하는 스포티파이 AI 음악 추천 서비스",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=192&h=192&fit=crop&q=80",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=512&h=512&fit=crop&q=80",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
